@@ -26,6 +26,8 @@ func New(l *log.Logger) (*UI, error) {
 		exitch:  exitch,
 	}
 
+	buildLayout()
+
 	go ui.renderLoop()
 	go ui.updateLoop()
 	go ui.eventLoop()
@@ -33,8 +35,29 @@ func New(l *log.Logger) (*UI, error) {
 	return ui, nil
 }
 
+func buildLayout() {
+	// Tabs
+	lpods := label("pods")
+	lpods.Height = 2
+	lrcs := label("rcs")
+	lrcs.Height = 2
+	lservices := label("services")
+	lservices.Height = 2
+	termui.Body.AddRows(
+		termui.NewRow(
+			termui.NewCol(2, 2, lpods),
+			termui.NewCol(2, 2, lrcs),
+			termui.NewCol(2, 2, lservices),
+		),
+	)
+
+	// Content
+
+	termui.Body.Align()
+}
+
 func (ui *UI) renderLoop() {
-	for range time.NewTicker(time.Second).C {
+	for range time.NewTicker(100 * time.Millisecond).C {
 		termui.Render(termui.Body)
 	}
 }
@@ -46,7 +69,8 @@ func (ui *UI) updateLoop() {
 }
 
 func (ui *UI) eventLoop() {
-	for e := range termui.EventCh() {
+	ec := termui.EventCh()
+	for e := range ec {
 		ui.log.Printf("%+v", e)
 		switch e.Type {
 		case termui.EventInterrupt:
@@ -73,4 +97,11 @@ type Event struct {
 	Resource string
 	Type     string
 	Data     interface{}
+}
+
+func label(text string) *termui.Par {
+	l := termui.NewPar(text)
+	l.Height = 1
+	l.HasBorder = false
+	return l
 }
