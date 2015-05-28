@@ -25,9 +25,9 @@ func (pl podList) toRows() []*termui.Row {
 	lhost.TextFgColor = termui.ColorWhite | termui.AttrBold
 
 	rows = append(rows, termui.NewRow(
-		termui.NewCol(2, 0, lname),
+		termui.NewCol(3, 0, lname),
 		termui.NewCol(1, 0, lstatus),
-		termui.NewCol(1, 0, lhost),
+		termui.NewCol(2, 0, lhost),
 	))
 	for _, p := range pl.pods {
 		rows = append(rows, p.toRow())
@@ -36,7 +36,7 @@ func (pl podList) toRows() []*termui.Row {
 }
 
 type pod struct {
-	p *api.Pod
+	p api.Pod
 }
 
 func (pr pod) toRow() *termui.Row {
@@ -45,8 +45,8 @@ func (pr pod) toRow() *termui.Row {
 	lhost := label(pr.p.Spec.Host)
 
 	return termui.NewRow(
-		termui.NewCol(2, 0, lname),
+		termui.NewCol(3, 0, lname),
 		termui.NewCol(1, 0, lstatus),
-		termui.NewCol(1, 0, lhost),
+		termui.NewCol(2, 0, lhost),
 	)
 }

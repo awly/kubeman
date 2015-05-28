@@ -2,13 +2,15 @@ package ui
 
 import (
 	"log"
-	"time"
+	"sort"
 
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/gizak/termui"
 )
 
 type UI struct {
 	Updates chan Event
+	pods    podList
 	log     *log.Logger
 	exitch  chan struct{}
 }
@@ -27,8 +29,8 @@ func New(l *log.Logger) (*UI, error) {
 	}
 
 	buildLayout()
+	ui.Redraw()
 
-	go ui.renderLoop()
 	go ui.updateLoop()
 	go ui.eventLoop()
 
@@ -56,16 +58,20 @@ func buildLayout() {
 	termui.Body.Align()
 }
 
-func (ui *UI) renderLoop() {
-	for range time.NewTicker(100 * time.Millisecond).C {
-		termui.Render(termui.Body)
+func (ui *UI) updateLoop() {
+	for e := range ui.Updates {
+		handleUpdate(ui, e)
 	}
 }
 
-func (ui *UI) updateLoop() {
-	for e := range ui.Updates {
-		ui.log.Println(e)
+func (ui *UI) SetPods(pods []api.Pod) {
+	upods := podList{pods: make([]pod, 0, len(pods))}
+	for _, p := range pods {
+		upods.pods = append(upods.pods, pod{p: p})
 	}
+	sort.Sort(upods)
+	ui.pods = upods
+	ui.Redraw()
 }
 
 func (ui *UI) eventLoop() {
@@ -93,10 +99,10 @@ func (ui *UI) ExitCh() <-chan struct{} {
 	return ui.exitch
 }
 
-type Event struct {
-	Resource string
-	Type     string
-	Data     interface{}
+func (ui *UI) Redraw() {
+	termui.Body.Rows = append(termui.Body.Rows[:1], ui.pods.toRows()...)
+	termui.Body.Align()
+	termui.Render(termui.Body)
 }
 
 func label(text string) *termui.Par {
