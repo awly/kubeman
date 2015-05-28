@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"log"
 	"sort"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
@@ -9,6 +10,7 @@ import (
 )
 
 type podsTab struct {
+	log  *log.Logger
 	pods []pod
 }
 
