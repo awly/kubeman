@@ -1,19 +1,51 @@
 package ui
 
 import (
+	"sort"
+
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
 	"github.com/gizak/termui"
 )
 
-type podList struct {
+type podsTab struct {
 	pods []pod
 }
 
-func (pl podList) Len() int           { return len(pl.pods) }
-func (pl podList) Less(i, j int) bool { return pl.pods[i].p.Name < pl.pods[j].p.Name }
-func (pl podList) Swap(i, j int)      { pl.pods[i], pl.pods[j] = pl.pods[j], pl.pods[i] }
+func (pl *podsTab) Len() int           { return len(pl.pods) }
+func (pl *podsTab) Less(i, j int) bool { return pl.pods[i].p.Name < pl.pods[j].p.Name }
+func (pl *podsTab) Swap(i, j int)      { pl.pods[i], pl.pods[j] = pl.pods[j], pl.pods[i] }
 
-func (pl podList) toRows() []*termui.Row {
+func (pl *podsTab) update(e Event) {
+	p := *e.Data.(*api.Pod)
+	switch e.Type {
+	case watch.Added:
+		pl.pods = append(pl.pods, pod{p: p})
+	case watch.Modified:
+		found := false
+		for i, up := range pl.pods {
+			if up.p.Name == p.Name {
+				found = true
+				pl.pods[i].p = p
+				break
+			}
+		}
+		if !found {
+			pl.pods = append(pl.pods, pod{p: p})
+		}
+	case watch.Deleted:
+		for i, up := range pl.pods {
+			if up.p.Name == p.Name {
+				pl.Swap(i, pl.Len()-1)
+				pl.pods = pl.pods[:pl.Len()-1]
+				break
+			}
+		}
+	}
+	sort.Sort(pl)
+}
+
+func (pl *podsTab) toRows() []*termui.Row {
 	rows := make([]*termui.Row, 0, len(pl.pods)+1)
 
 	// header

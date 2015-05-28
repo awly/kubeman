@@ -52,7 +52,7 @@ func main() {
 				continue
 			}
 			u.Updates <- ui.Event{
-				Resource: "pod",
+				Resource: "pods",
 				Type:     e.Type,
 				Data:     e.Object,
 			}

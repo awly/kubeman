@@ -2,17 +2,22 @@ package ui
 
 import (
 	"log"
-	"sort"
 
-	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/gizak/termui"
 )
 
 type UI struct {
 	Updates chan Event
-	pods    podList
-	log     *log.Logger
-	exitch  chan struct{}
+
+	tabs     map[string]tab
+	selected string
+	log      *log.Logger
+	exitch   chan struct{}
+}
+
+type tab interface {
+	update(Event)
+	toRows() []*termui.Row
 }
 
 func New(l *log.Logger) (*UI, error) {
@@ -26,9 +31,13 @@ func New(l *log.Logger) (*UI, error) {
 		Updates: uc,
 		log:     l,
 		exitch:  exitch,
+		tabs: map[string]tab{
+			"pods": &podsTab{},
+		},
+		selected: "pods",
 	}
 
-	buildLayout()
+	ui.buildLayout()
 	ui.Redraw()
 
 	go ui.updateLoop()
@@ -37,21 +46,15 @@ func New(l *log.Logger) (*UI, error) {
 	return ui, nil
 }
 
-func buildLayout() {
+func (ui *UI) buildLayout() {
 	// Tabs
-	lpods := label("pods")
-	lpods.Height = 2
-	lrcs := label("rcs")
-	lrcs.Height = 2
-	lservices := label("services")
-	lservices.Height = 2
-	termui.Body.AddRows(
-		termui.NewRow(
-			termui.NewCol(2, 2, lpods),
-			termui.NewCol(2, 2, lrcs),
-			termui.NewCol(2, 2, lservices),
-		),
-	)
+	tabCols := make([]*termui.Row, 0, len(ui.tabs))
+	for n := range ui.tabs {
+		l := label(n)
+		l.Height = 2
+		tabCols = append(tabCols, termui.NewCol(12/len(ui.tabs), 0, l))
+	}
+	termui.Body.AddRows(termui.NewRow(tabCols...))
 
 	// Content
 
@@ -62,16 +65,6 @@ func (ui *UI) updateLoop() {
 	for e := range ui.Updates {
 		handleUpdate(ui, e)
 	}
-}
-
-func (ui *UI) SetPods(pods []api.Pod) {
-	upods := podList{pods: make([]pod, 0, len(pods))}
-	for _, p := range pods {
-		upods.pods = append(upods.pods, pod{p: p})
-	}
-	sort.Sort(upods)
-	ui.pods = upods
-	ui.Redraw()
 }
 
 func (ui *UI) eventLoop() {
@@ -100,7 +93,7 @@ func (ui *UI) ExitCh() <-chan struct{} {
 }
 
 func (ui *UI) Redraw() {
-	termui.Body.Rows = append(termui.Body.Rows[:1], ui.pods.toRows()...)
+	termui.Body.Rows = append(termui.Body.Rows[:1], ui.tabs[ui.selected].toRows()...)
 	termui.Body.Align()
 	termui.Render(termui.Body)
 }
