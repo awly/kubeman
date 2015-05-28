@@ -18,6 +18,10 @@ func handleUpdate(ui *UI, e Event) {
 	if e.Type == watch.Error {
 		return
 	}
+	if e.Data == nil {
+		ui.log.Println("event data is nil, skipping")
+		return
+	}
 	switch e.Resource {
 	case "pod":
 		p := *e.Data.(*api.Pod)
