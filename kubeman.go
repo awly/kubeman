@@ -41,7 +41,16 @@ func main() {
 
 	for {
 		select {
-		case e := <-pw:
+		case e, ok := <-pw:
+			if !ok {
+				log.Println("pod watch closed, reconnecting")
+				pw, err = c.WatchPods()
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				continue
+			}
 			u.Updates <- ui.Event{
 				Resource: "pod",
 				Type:     e.Type,
