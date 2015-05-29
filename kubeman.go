@@ -5,7 +5,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
 	"github.com/alytvynov/kubeman/client"
 	"github.com/alytvynov/kubeman/ui"
 )
@@ -33,72 +35,65 @@ func main() {
 	}
 	defer u.Close()
 
-	pw, err := c.WatchPods()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	sw, err := c.WatchServices()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	rw, err := c.WatchRCs()
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	watchUpdates(c, u)
+}
 
-	for {
-		select {
-		case e, ok := <-pw:
-			if !ok {
-				log.Println("pod watch closed, reconnecting")
-				pw, err = c.WatchPods()
-				if err != nil {
-					log.Println(err)
-					return
-				}
-				continue
-			}
-			u.Updates <- ui.Event{
-				Resource: "pods",
-				Type:     e.Type,
-				Data:     e.Object,
-			}
-		case e, ok := <-sw:
-			if !ok {
-				log.Println("service watch closed, reconnecting")
-				sw, err = c.WatchServices()
-				if err != nil {
-					log.Println(err)
-					return
-				}
-				continue
-			}
-			u.Updates <- ui.Event{
-				Resource: "services",
-				Type:     e.Type,
-				Data:     e.Object,
-			}
-		case e, ok := <-rw:
-			if !ok {
-				log.Println("rc watch closed, reconnecting")
-				sw, err = c.WatchRCs()
-				if err != nil {
-					log.Println(err)
-					return
-				}
-				continue
-			}
-			u.Updates <- ui.Event{
-				Resource: "rcs",
-				Type:     e.Type,
-				Data:     e.Object,
-			}
-		case <-u.ExitCh():
-			log.Println("exit")
+type watcher struct {
+	resource string
+	c        <-chan watch.Event
+	watch    func() (<-chan watch.Event, error)
+}
+
+func watchUpdates(c *client.Client, u *ui.UI) {
+	watches := []watcher{
+		{resource: "pods", watch: c.WatchPods},
+		{resource: "services", watch: c.WatchServices},
+		{resource: "rcs", watch: c.WatchRCs},
+	}
+	var err error
+	for i, w := range watches {
+		watches[i].c, err = w.watch()
+		if err != nil {
+			log.Println(err)
 			return
 		}
 	}
+
+	cases := make([]reflect.SelectCase, 0, len(watches))
+	for _, w := range watches {
+		cases = append(cases, reflect.SelectCase{
+			Dir:  reflect.SelectRecv,
+			Chan: reflect.ValueOf(w.c),
+		})
+	}
+	cases = append(cases, reflect.SelectCase{
+		Dir:  reflect.SelectRecv,
+		Chan: reflect.ValueOf(u.ExitCh()),
+	})
+
+	for {
+		i, val, ok := reflect.Select(cases)
+		// if ui.ExitCh
+		if i == len(cases)-1 {
+			log.Println("exit")
+			return
+		}
+		w := watches[i]
+		if !ok {
+			log.Println(w.resource, "watch closed, reconnecting")
+			w.c, err = w.watch()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			continue
+		}
+		e := val.Interface().(watch.Event)
+		u.Updates <- ui.Event{
+			Resource: w.resource,
+			Type:     e.Type,
+			Data:     e.Object,
+		}
+	}
+
 }
