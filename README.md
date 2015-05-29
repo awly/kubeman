@@ -6,9 +6,7 @@ It is intended to be used as a replacement for `kubectl` although it has a long 
 
 TODO:
 
-- functional tabs
 - navigation
-- replication controllers tab
 - nodes tab
 - colors (mainly for statuses)
 - log streaming
