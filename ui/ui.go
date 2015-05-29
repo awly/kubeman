@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/gizak/termui"
+	"github.com/nsf/termbox-go"
 )
 
 type UI struct {
@@ -25,6 +26,7 @@ func New(l *log.Logger) (*UI, error) {
 	if err := termui.Init(); err != nil {
 		return nil, err
 	}
+	termbox.SetInputMode(termbox.InputCurrent | termbox.InputMouse)
 
 	uc := make(chan Event)
 	exitch := make(chan struct{})
@@ -50,11 +52,7 @@ func New(l *log.Logger) (*UI, error) {
 
 func (ui *UI) buildLayout() {
 	// Tabs
-	names := make([]string, 0, len(ui.tabs))
-	for n := range ui.tabs {
-		names = append(names, n)
-	}
-	sort.Strings(names)
+	names := ui.tabNames()
 	tabCols := make([]*termui.Row, 0, len(names))
 	for _, n := range names {
 		l := label(n)
@@ -87,6 +85,15 @@ func (ui *UI) eventLoop() {
 			if e.Key == termui.KeyCtrlC || e.Ch == 'q' {
 				close(ui.exitch)
 			}
+		case termui.EventMouse:
+			// Top 2 rows are tabs
+			if e.MouseY < 2 {
+				// Tab index = X / tabWidth
+				i := e.MouseX / (termui.TermWidth() / len(ui.tabs))
+
+				ui.selected = ui.tabNames()[i]
+				ui.Redraw()
+			}
 		}
 	}
 }
@@ -110,4 +117,13 @@ func label(text string) *termui.Par {
 	l.Height = 1
 	l.HasBorder = false
 	return l
+}
+
+func (ui *UI) tabNames() []string {
+	names := make([]string, 0, len(ui.tabs))
+	for n := range ui.tabs {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	return names
 }
