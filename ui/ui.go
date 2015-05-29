@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"sync"
 
 	"github.com/gizak/termui"
 	"github.com/nsf/termbox-go"
@@ -16,6 +17,9 @@ type UI struct {
 	selected string
 	log      *log.Logger
 	exitch   chan struct{}
+
+	// protects selected and termui.Body
+	mu *sync.Mutex
 }
 
 type tab interface {
@@ -24,11 +28,6 @@ type tab interface {
 }
 
 func New(l *log.Logger) (*UI, error) {
-	if err := termui.Init(); err != nil {
-		return nil, err
-	}
-	termbox.SetInputMode(termbox.InputCurrent | termbox.InputMouse)
-
 	uc := make(chan Event)
 	exitch := make(chan struct{})
 	ui := &UI{
@@ -36,22 +35,30 @@ func New(l *log.Logger) (*UI, error) {
 		log:     l,
 		exitch:  exitch,
 		tabs: map[string]tab{
-			"pods":     &podsTab{log: l},
-			"services": &servicesTab{log: l},
+			"pods":     &podsTab{log: l, mu: &sync.Mutex{}},
+			"services": &servicesTab{log: l, mu: &sync.Mutex{}},
 		},
 		selected: "pods",
+		mu:       &sync.Mutex{},
 	}
+
+	go ui.updateLoop()
+	go ui.eventLoop(termui.EventCh())
+
+	if err := termui.Init(); err != nil {
+		return nil, err
+	}
+	termbox.SetInputMode(termbox.InputCurrent | termbox.InputMouse)
 
 	ui.RedrawTabs()
 	ui.RedrawBody()
-
-	go ui.updateLoop()
-	go ui.eventLoop()
 
 	return ui, nil
 }
 
 func (ui *UI) RedrawTabs() {
+	ui.mu.Lock()
+	defer ui.mu.Unlock()
 	names := ui.tabNames()
 	tabCols := make([]*termui.Row, 0, len(names))
 	for i, n := range names {
@@ -76,56 +83,17 @@ func (ui *UI) RedrawTabs() {
 	termui.Render(termui.Body)
 }
 
-func (ui *UI) updateLoop() {
-	for e := range ui.Updates {
-		handleUpdate(ui, e)
-	}
-}
-
-func (ui *UI) eventLoop() {
-	ec := termui.EventCh()
-	for e := range ec {
-		ui.log.Printf("%+v", e)
-		switch e.Type {
-		case termui.EventInterrupt:
-			close(ui.exitch)
-		case termui.EventResize:
-			termui.Body.Width = termui.TermWidth()
-			ui.RedrawTabs()
-			ui.RedrawBody()
-		case termui.EventError:
-			close(ui.exitch)
-		case termui.EventKey:
-			if e.Key == termui.KeyCtrlC || e.Ch == 'q' {
-				close(ui.exitch)
-				continue
-			}
-			if e.Ch >= '1' && e.Ch <= '9' {
-				i := e.Ch - '1'
-				tabs := ui.tabNames()
-				if int(i) >= len(tabs) {
-					continue
-				}
-				ui.selected = ui.tabNames()[i]
-				ui.RedrawTabs()
-				ui.RedrawBody()
-				continue
-			}
-		case termui.EventMouse:
-			// Top 2 rows are tabs
-			if e.MouseY < 2 {
-				// Tab index = X / tabWidth
-				i := e.MouseX / (termui.TermWidth() / len(ui.tabs))
-
-				ui.selected = ui.tabNames()[i]
-				ui.RedrawTabs()
-				ui.RedrawBody()
-			}
-		}
-	}
+func (ui *UI) RedrawBody() {
+	ui.mu.Lock()
+	defer ui.mu.Unlock()
+	termui.Body.Rows = append(termui.Body.Rows[:1], ui.tabs[ui.selected].toRows()...)
+	termui.Body.Align()
+	termui.Render(termui.Body)
 }
 
 func (ui *UI) Close() {
+	ui.mu.Lock()
+	defer ui.mu.Unlock()
 	termui.Close()
 }
 
@@ -133,10 +101,13 @@ func (ui *UI) ExitCh() <-chan struct{} {
 	return ui.exitch
 }
 
-func (ui *UI) RedrawBody() {
-	termui.Body.Rows = append(termui.Body.Rows[:1], ui.tabs[ui.selected].toRows()...)
-	termui.Body.Align()
-	termui.Render(termui.Body)
+func (ui *UI) tabNames() []string {
+	names := make([]string, 0, len(ui.tabs))
+	for n := range ui.tabs {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	return names
 }
 
 func label(text string) *termui.Par {
@@ -151,13 +122,4 @@ func header(text string) *termui.Par {
 	l := label(text)
 	l.TextFgColor = termui.ColorWhite | termui.AttrBold
 	return l
-}
-
-func (ui *UI) tabNames() []string {
-	names := make([]string, 0, len(ui.tabs))
-	for n := range ui.tabs {
-		names = append(names, n)
-	}
-	sort.Strings(names)
-	return names
 }

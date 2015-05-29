@@ -3,6 +3,7 @@ package ui
 import (
 	"log"
 	"sort"
+	"sync"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
@@ -10,7 +11,9 @@ import (
 )
 
 type podsTab struct {
-	log  *log.Logger
+	log *log.Logger
+
+	mu   *sync.Mutex
 	pods []pod
 }
 
@@ -19,6 +22,8 @@ func (pl *podsTab) Less(i, j int) bool { return pl.pods[i].p.Name < pl.pods[j].p
 func (pl *podsTab) Swap(i, j int)      { pl.pods[i], pl.pods[j] = pl.pods[j], pl.pods[i] }
 
 func (pl *podsTab) update(e Event) {
+	pl.mu.Lock()
+	defer pl.mu.Unlock()
 	p := *e.Data.(*api.Pod)
 	switch e.Type {
 	case watch.Added:
@@ -48,6 +53,8 @@ func (pl *podsTab) update(e Event) {
 }
 
 func (pl *podsTab) toRows() []*termui.Row {
+	pl.mu.Lock()
+	defer pl.mu.Unlock()
 	rows := make([]*termui.Row, 0)
 
 	// header

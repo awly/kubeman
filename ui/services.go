@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"sync"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
@@ -11,7 +12,9 @@ import (
 )
 
 type servicesTab struct {
-	log      *log.Logger
+	log *log.Logger
+
+	mu       *sync.Mutex
 	services []service
 }
 
@@ -22,6 +25,8 @@ func (st *servicesTab) Swap(i, j int) {
 }
 
 func (st *servicesTab) update(e Event) {
+	st.mu.Lock()
+	defer st.mu.Unlock()
 	p := *e.Data.(*api.Service)
 	switch e.Type {
 	case watch.Added:
@@ -51,6 +56,8 @@ func (st *servicesTab) update(e Event) {
 }
 
 func (st *servicesTab) toRows() []*termui.Row {
+	st.mu.Lock()
+	defer st.mu.Unlock()
 	rows := make([]*termui.Row, 0, len(st.services)+1)
 
 	// header
