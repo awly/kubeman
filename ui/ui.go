@@ -89,6 +89,10 @@ func (ui *UI) eventLoop() {
 		switch e.Type {
 		case termui.EventInterrupt:
 			close(ui.exitch)
+		case termui.EventResize:
+			termui.Body.Width = termui.TermWidth()
+			ui.RedrawTabs()
+			ui.RedrawBody()
 		case termui.EventError:
 			close(ui.exitch)
 		case termui.EventKey:
