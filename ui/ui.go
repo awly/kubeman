@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"log"
 	"sort"
 
@@ -51,14 +52,13 @@ func New(l *log.Logger) (*UI, error) {
 }
 
 func (ui *UI) RedrawTabs() {
-	// Tabs
-	ui.log.Println(ui.selected)
 	names := ui.tabNames()
 	tabCols := make([]*termui.Row, 0, len(names))
-	for _, n := range names {
-		l := label(" " + n + " ")
+	for i, n := range names {
+		l := label(fmt.Sprintf(" %d: %s ", i+1, n))
 		l.BgColor = termui.ColorBlue
 		if n == ui.selected {
+			l.Text += "* "
 			l.BgColor = termui.ColorCyan
 			l.TextBgColor = termui.ColorCyan
 			l.TextFgColor = termui.ColorDefault | termui.AttrBold
@@ -98,6 +98,18 @@ func (ui *UI) eventLoop() {
 		case termui.EventKey:
 			if e.Key == termui.KeyCtrlC || e.Ch == 'q' {
 				close(ui.exitch)
+				continue
+			}
+			if e.Ch >= '1' && e.Ch <= '9' {
+				i := e.Ch - '1'
+				tabs := ui.tabNames()
+				if int(i) >= len(tabs) {
+					continue
+				}
+				ui.selected = ui.tabNames()[i]
+				ui.RedrawTabs()
+				ui.RedrawBody()
+				continue
 			}
 		case termui.EventMouse:
 			// Top 2 rows are tabs
