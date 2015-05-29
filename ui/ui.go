@@ -2,6 +2,7 @@ package ui
 
 import (
 	"log"
+	"sort"
 
 	"github.com/gizak/termui"
 )
@@ -48,8 +49,13 @@ func New(l *log.Logger) (*UI, error) {
 
 func (ui *UI) buildLayout() {
 	// Tabs
-	tabCols := make([]*termui.Row, 0, len(ui.tabs))
+	names := make([]string, 0, len(ui.tabs))
 	for n := range ui.tabs {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	tabCols := make([]*termui.Row, 0, len(names))
+	for _, n := range names {
 		l := label(n)
 		l.Height = 2
 		tabCols = append(tabCols, termui.NewCol(12/len(ui.tabs), 0, l))
