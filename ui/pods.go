@@ -48,23 +48,22 @@ func (pl *podsTab) update(e Event) {
 }
 
 func (pl *podsTab) toRows() []*termui.Row {
-	rows := make([]*termui.Row, 0, len(pl.pods)+1)
+	rows := make([]*termui.Row, 0)
 
 	// header
-	lname := label("name")
-	lname.TextFgColor = termui.ColorWhite | termui.AttrBold
-	lstatus := label("status")
-	lstatus.TextFgColor = termui.ColorWhite | termui.AttrBold
-	lhost := label("host")
-	lhost.TextFgColor = termui.ColorWhite | termui.AttrBold
+	lname := header("name")
+	lstatus := header("status")
+	lhost := header("host")
+	lcont := header("container")
 
 	rows = append(rows, termui.NewRow(
 		termui.NewCol(3, 0, lname),
 		termui.NewCol(1, 0, lstatus),
 		termui.NewCol(2, 0, lhost),
+		termui.NewCol(2, 0, lcont),
 	))
 	for _, p := range pl.pods {
-		rows = append(rows, p.toRow())
+		rows = append(rows, p.toRows()...)
 	}
 	return rows
 }
@@ -73,14 +72,25 @@ type pod struct {
 	p api.Pod
 }
 
-func (pr pod) toRow() *termui.Row {
+func (pr pod) toRows() []*termui.Row {
 	lname := label(pr.p.Name)
 	lstatus := label(string(pr.p.Status.Phase))
 	lhost := label(pr.p.Spec.Host)
 
-	return termui.NewRow(
-		termui.NewCol(3, 0, lname),
-		termui.NewCol(1, 0, lstatus),
-		termui.NewCol(2, 0, lhost),
-	)
+	rows := make([]*termui.Row, 0, len(pr.p.Spec.Containers))
+	for i, c := range pr.p.Spec.Containers {
+		if i != 0 {
+			lname.Text = ""
+			lstatus.Text = ""
+			lhost.Text = ""
+		}
+		lcont := label(c.Image)
+		rows = append(rows, termui.NewRow(
+			termui.NewCol(3, 0, lname),
+			termui.NewCol(1, 0, lstatus),
+			termui.NewCol(2, 0, lhost),
+			termui.NewCol(2, 0, lcont),
+		))
+	}
+	return rows
 }

@@ -143,6 +143,13 @@ func label(text string) *termui.Par {
 	l := termui.NewPar(text)
 	l.Height = 1
 	l.HasBorder = false
+	l.PaddingLeft = 1
+	return l
+}
+
+func header(text string) *termui.Par {
+	l := label(text)
+	l.TextFgColor = termui.ColorWhite | termui.AttrBold
 	return l
 }
 
