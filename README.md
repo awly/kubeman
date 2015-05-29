@@ -9,7 +9,6 @@ TODO:
 - functional tabs
 - navigation
 - replication controllers tab
-- services tab
 - nodes tab
 - colors (mainly for statuses)
 - log streaming
