@@ -43,6 +43,11 @@ func main() {
 		log.Println(err)
 		return
 	}
+	rw, err := c.WatchRCs()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	for {
 		select {
@@ -73,6 +78,21 @@ func main() {
 			}
 			u.Updates <- ui.Event{
 				Resource: "services",
+				Type:     e.Type,
+				Data:     e.Object,
+			}
+		case e, ok := <-rw:
+			if !ok {
+				log.Println("rc watch closed, reconnecting")
+				sw, err = c.WatchRCs()
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				continue
+			}
+			u.Updates <- ui.Event{
+				Resource: "rcs",
 				Type:     e.Type,
 				Data:     e.Object,
 			}

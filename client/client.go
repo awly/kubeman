@@ -64,3 +64,19 @@ func (c *Client) WatchPods() (<-chan watch.Event, error) {
 	}
 	return w.ResultChan(), nil
 }
+
+func (c *Client) RCs() ([]api.ReplicationController, error) {
+	pl, err := c.c.ReplicationControllers("default").List(labels.Everything())
+	if err != nil {
+		return nil, err
+	}
+	return pl.Items, nil
+}
+
+func (c *Client) WatchRCs() (<-chan watch.Event, error) {
+	w, err := c.c.ReplicationControllers("default").Watch(labels.Everything(), fields.Everything(), "")
+	if err != nil {
+		return nil, err
+	}
+	return w.ResultChan(), nil
+}
