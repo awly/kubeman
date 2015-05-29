@@ -86,10 +86,10 @@ func (pr pod) toRows() []*termui.Row {
 
 	rows := make([]*termui.Row, 0, len(pr.p.Spec.Containers))
 	for i, c := range pr.p.Spec.Containers {
-		if i != 0 {
-			lname.Text = ""
-			lstatus.Text = ""
-			lhost.Text = ""
+		if i > 0 {
+			lname = label("")
+			lstatus = label("")
+			lhost = label("")
 		}
 		lcont := label(c.Image)
 		rows = append(rows, termui.NewRow(

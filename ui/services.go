@@ -100,9 +100,9 @@ func (s service) toRows() []*termui.Row {
 	rows := make([]*termui.Row, 0, len(s.s.Spec.Ports))
 	for i, p := range s.s.Spec.Ports {
 		if i > 0 {
-			lname.Text = ""
-			ltype.Text = ""
-			lip.Text = ""
+			lname = label("")
+			ltype = label("")
+			lip = label("")
 		}
 		lport := label(fmt.Sprintf("%d -> %s", p.Port, p.TargetPort.String()))
 		rows = append(rows, termui.NewRow(
