@@ -77,7 +77,7 @@ func (st *servicesTab) toRows() []*termui.Row {
 		termui.NewCol(1, 0, lport),
 	))
 	for _, p := range st.services {
-		rows = append(rows, p.toRow())
+		rows = append(rows, p.toRows()...)
 	}
 	return rows
 }
@@ -86,7 +86,7 @@ type service struct {
 	s api.Service
 }
 
-func (s service) toRow() *termui.Row {
+func (s service) toRows() []*termui.Row {
 	lname := label(s.s.Name)
 	ltype := label(string(s.s.Spec.Type))
 	lip := label(s.s.Spec.PortalIP)
@@ -97,14 +97,20 @@ func (s service) toRow() *termui.Row {
 		lip.Text = s.s.Status.LoadBalancer.Ingress[0].IP
 	}
 
-	// TODO: Service can have multiste ports
-	port := s.s.Spec.Ports[0]
-	lport := label(fmt.Sprintf("%d -> %s", port.Port, port.TargetPort.String()))
-
-	return termui.NewRow(
-		termui.NewCol(3, 0, lname),
-		termui.NewCol(1, 0, ltype),
-		termui.NewCol(1, 0, lip),
-		termui.NewCol(1, 0, lport),
-	)
+	rows := make([]*termui.Row, 0, len(s.s.Spec.Ports))
+	for i, p := range s.s.Spec.Ports {
+		if i > 0 {
+			lname.Text = ""
+			ltype.Text = ""
+			lip.Text = ""
+		}
+		lport := label(fmt.Sprintf("%d -> %s", p.Port, p.TargetPort.String()))
+		rows = append(rows, termui.NewRow(
+			termui.NewCol(3, 0, lname),
+			termui.NewCol(1, 0, ltype),
+			termui.NewCol(1, 0, lip),
+			termui.NewCol(1, 0, lport),
+		))
+	}
+	return rows
 }
