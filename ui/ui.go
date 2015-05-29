@@ -33,7 +33,8 @@ func New(l *log.Logger) (*UI, error) {
 		log:     l,
 		exitch:  exitch,
 		tabs: map[string]tab{
-			"pods": &podsTab{log: l},
+			"pods":     &podsTab{log: l},
+			"services": &servicesTab{log: l},
 		},
 		selected: "pods",
 	}
