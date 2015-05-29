@@ -19,5 +19,5 @@ func handleUpdate(ui *UI, e Event) {
 		return
 	}
 	t.update(e)
-	ui.Redraw()
+	ui.RedrawBody()
 }

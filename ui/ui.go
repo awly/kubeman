@@ -41,8 +41,8 @@ func New(l *log.Logger) (*UI, error) {
 		selected: "pods",
 	}
 
-	ui.buildLayout()
-	ui.Redraw()
+	ui.RedrawTabs()
+	ui.RedrawBody()
 
 	go ui.updateLoop()
 	go ui.eventLoop()
@@ -50,20 +50,30 @@ func New(l *log.Logger) (*UI, error) {
 	return ui, nil
 }
 
-func (ui *UI) buildLayout() {
+func (ui *UI) RedrawTabs() {
 	// Tabs
+	ui.log.Println(ui.selected)
 	names := ui.tabNames()
 	tabCols := make([]*termui.Row, 0, len(names))
 	for _, n := range names {
-		l := label(n)
+		l := label(" " + n + " ")
+		l.BgColor = termui.ColorBlue
+		if n == ui.selected {
+			l.BgColor = termui.ColorCyan
+			l.TextBgColor = termui.ColorCyan
+			l.TextFgColor = termui.ColorDefault | termui.AttrBold
+		}
 		l.Height = 2
+		l.PaddingLeft = 1
 		tabCols = append(tabCols, termui.NewCol(12/len(ui.tabs), 0, l))
 	}
-	termui.Body.AddRows(termui.NewRow(tabCols...))
-
-	// Content
-
+	if len(termui.Body.Rows) > 1 {
+		termui.Body.Rows[0] = termui.NewRow(tabCols...)
+	} else {
+		termui.Body.AddRows(termui.NewRow(tabCols...))
+	}
 	termui.Body.Align()
+	termui.Render(termui.Body)
 }
 
 func (ui *UI) updateLoop() {
@@ -92,7 +102,8 @@ func (ui *UI) eventLoop() {
 				i := e.MouseX / (termui.TermWidth() / len(ui.tabs))
 
 				ui.selected = ui.tabNames()[i]
-				ui.Redraw()
+				ui.RedrawTabs()
+				ui.RedrawBody()
 			}
 		}
 	}
@@ -106,7 +117,7 @@ func (ui *UI) ExitCh() <-chan struct{} {
 	return ui.exitch
 }
 
-func (ui *UI) Redraw() {
+func (ui *UI) RedrawBody() {
 	termui.Body.Rows = append(termui.Body.Rows[:1], ui.tabs[ui.selected].toRows()...)
 	termui.Body.Align()
 	termui.Render(termui.Body)
