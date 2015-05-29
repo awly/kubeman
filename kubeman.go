@@ -38,6 +38,11 @@ func main() {
 		log.Println(err)
 		return
 	}
+	sw, err := c.WatchServices()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	for {
 		select {
@@ -53,6 +58,21 @@ func main() {
 			}
 			u.Updates <- ui.Event{
 				Resource: "pods",
+				Type:     e.Type,
+				Data:     e.Object,
+			}
+		case e, ok := <-sw:
+			if !ok {
+				log.Println("service watch closed, reconnecting")
+				sw, err = c.WatchServices()
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				continue
+			}
+			u.Updates <- ui.Event{
+				Resource: "services",
 				Type:     e.Type,
 				Data:     e.Object,
 			}

@@ -33,6 +33,22 @@ func Connect() (*Client, error) {
 	return &Client{c: c}, nil
 }
 
+func (c *Client) Services() ([]api.Service, error) {
+	sl, err := c.c.Services("default").List(labels.Everything())
+	if err != nil {
+		return nil, err
+	}
+	return sl.Items, nil
+}
+
+func (c *Client) WatchServices() (<-chan watch.Event, error) {
+	w, err := c.c.Services("default").Watch(labels.Everything(), fields.Everything(), "")
+	if err != nil {
+		return nil, err
+	}
+	return w.ResultChan(), nil
+}
+
 func (c *Client) Pods() ([]api.Pod, error) {
 	pl, err := c.c.Pods("default").List(labels.Everything(), fields.Everything())
 	if err != nil {

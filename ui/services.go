@@ -84,9 +84,15 @@ func (s service) toRow() *termui.Row {
 	ltype := label(string(s.s.Spec.Type))
 	lip := label(s.s.Spec.PortalIP)
 
+	// TODO: seems like LoadBalancer field is WIP right now and is not
+	// populated. Remove the len check later.
+	if s.s.Spec.Type == api.ServiceTypeLoadBalancer && len(s.s.Status.LoadBalancer.Ingress) > 0 {
+		lip.Text = s.s.Status.LoadBalancer.Ingress[0].IP
+	}
+
 	// TODO: Service can have multiste ports
 	port := s.s.Spec.Ports[0]
-	lport := label(fmt.Sprintf("%d -> %s", port.Port, port.TargetPort))
+	lport := label(fmt.Sprintf("%d -> %s", port.Port, port.TargetPort.String()))
 
 	return termui.NewRow(
 		termui.NewCol(3, 0, lname),
