@@ -7,7 +7,6 @@ It is intended to be used as a replacement for `kubectl` although it has a long 
 TODO:
 
 - navigation
-- nodes tab
 - colors (mainly for statuses)
 - log streaming
 - status management (create, stop, resize, etc.)
