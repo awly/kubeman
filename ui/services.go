@@ -71,10 +71,10 @@ func (st *servicesTab) toRows() []*termui.Row {
 	lport.TextFgColor = termui.ColorWhite | termui.AttrBold
 
 	rows = append(rows, termui.NewRow(
-		termui.NewCol(3, 0, lname),
-		termui.NewCol(1, 0, ltype),
-		termui.NewCol(1, 0, lip),
-		termui.NewCol(1, 0, lport),
+		termui.NewCol(4, 0, lname),
+		termui.NewCol(2, 0, ltype),
+		termui.NewCol(3, 0, lip),
+		termui.NewCol(3, 0, lport),
 	))
 	for _, p := range st.services {
 		rows = append(rows, p.toRows()...)
@@ -106,10 +106,10 @@ func (s service) toRows() []*termui.Row {
 		}
 		lport := label(fmt.Sprintf("%d -> %s", p.Port, p.TargetPort.String()))
 		rows = append(rows, termui.NewRow(
-			termui.NewCol(3, 0, lname),
-			termui.NewCol(1, 0, ltype),
-			termui.NewCol(1, 0, lip),
-			termui.NewCol(1, 0, lport),
+			termui.NewCol(4, 0, lname),
+			termui.NewCol(2, 0, ltype),
+			termui.NewCol(3, 0, lip),
+			termui.NewCol(3, 0, lport),
 		))
 	}
 	return rows

@@ -65,10 +65,10 @@ func (rt *rcsTab) toRows() []*termui.Row {
 	lselect := header("selectors")
 
 	rows = append(rows, termui.NewRow(
-		termui.NewCol(3, 0, lname),
+		termui.NewCol(4, 0, lname),
 		termui.NewCol(1, 0, lreplicas),
-		termui.NewCol(1, 0, ltmpl),
-		termui.NewCol(2, 0, lselect),
+		termui.NewCol(3, 0, ltmpl),
+		termui.NewCol(4, 0, lselect),
 	))
 	for _, r := range rt.rcs {
 		rows = append(rows, r.toRows()...)
@@ -108,10 +108,10 @@ func (r rc) toRows() []*termui.Row {
 
 		lselect := label(fmt.Sprintf("%s=%s", n, r.rc.Spec.Selector[n]))
 		rows = append(rows, termui.NewRow(
-			termui.NewCol(3, 0, lname),
+			termui.NewCol(4, 0, lname),
 			termui.NewCol(1, 0, lreplicas),
-			termui.NewCol(1, 0, ltmpl),
-			termui.NewCol(2, 0, lselect),
+			termui.NewCol(3, 0, ltmpl),
+			termui.NewCol(4, 0, lselect),
 		))
 	}
 

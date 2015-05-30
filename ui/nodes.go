@@ -65,11 +65,11 @@ func (rt *nodesTab) toRows() []*termui.Row {
 	lmem := header("mem")
 
 	rows = append(rows, termui.NewRow(
-		termui.NewCol(3, 0, lname),
-		termui.NewCol(1, 0, lstate),
-		termui.NewCol(1, 0, laddr),
-		termui.NewCol(1, 0, lcpu),
-		termui.NewCol(1, 0, lmem),
+		termui.NewCol(4, 0, lname),
+		termui.NewCol(2, 0, lstate),
+		termui.NewCol(2, 0, laddr),
+		termui.NewCol(2, 0, lcpu),
+		termui.NewCol(2, 0, lmem),
 	))
 	for _, r := range rt.nodes {
 		rows = append(rows, r.toRow())
@@ -103,10 +103,10 @@ func (r node) toRow() *termui.Row {
 	laddr := label(addr)
 
 	return termui.NewRow(
-		termui.NewCol(3, 0, lname),
-		termui.NewCol(1, 0, lstate),
-		termui.NewCol(1, 0, laddr),
-		termui.NewCol(1, 0, lcpu),
-		termui.NewCol(1, 0, lmem),
+		termui.NewCol(4, 0, lname),
+		termui.NewCol(2, 0, lstate),
+		termui.NewCol(2, 0, laddr),
+		termui.NewCol(2, 0, lcpu),
+		termui.NewCol(2, 0, lmem),
 	)
 }

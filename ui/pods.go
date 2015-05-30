@@ -64,10 +64,10 @@ func (pl *podsTab) toRows() []*termui.Row {
 	lcont := header("container")
 
 	rows = append(rows, termui.NewRow(
-		termui.NewCol(3, 0, lname),
-		termui.NewCol(1, 0, lstatus),
-		termui.NewCol(2, 0, lhost),
-		termui.NewCol(2, 0, lcont),
+		termui.NewCol(4, 0, lname),
+		termui.NewCol(2, 0, lstatus),
+		termui.NewCol(3, 0, lhost),
+		termui.NewCol(3, 0, lcont),
 	))
 	for _, p := range pl.pods {
 		rows = append(rows, p.toRows()...)
@@ -93,10 +93,10 @@ func (pr pod) toRows() []*termui.Row {
 		}
 		lcont := label(c.Image)
 		rows = append(rows, termui.NewRow(
-			termui.NewCol(3, 0, lname),
-			termui.NewCol(1, 0, lstatus),
-			termui.NewCol(2, 0, lhost),
-			termui.NewCol(2, 0, lcont),
+			termui.NewCol(4, 0, lname),
+			termui.NewCol(2, 0, lstatus),
+			termui.NewCol(3, 0, lhost),
+			termui.NewCol(3, 0, lcont),
 		))
 	}
 	return rows
