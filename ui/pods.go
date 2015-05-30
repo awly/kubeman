@@ -82,6 +82,14 @@ type pod struct {
 func (pr pod) toRows() []*termui.Row {
 	lname := label(pr.p.Name)
 	lstatus := label(string(pr.p.Status.Phase))
+	switch pr.p.Status.Phase {
+	case api.PodRunning, api.PodSucceeded:
+		lstatus.TextFgColor = termui.ColorGreen
+	case api.PodPending:
+		lstatus.TextFgColor = termui.ColorYellow
+	case api.PodFailed, api.PodUnknown:
+		lstatus.TextFgColor = termui.ColorRed
+	}
 	lhost := label(pr.p.Spec.Host)
 
 	rows := make([]*termui.Row, 0, len(pr.p.Spec.Containers))

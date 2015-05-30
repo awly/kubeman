@@ -83,6 +83,11 @@ type rc struct {
 func (r rc) toRows() []*termui.Row {
 	lname := label(r.rc.Name)
 	lreplicas := label(fmt.Sprintf("%d/%d", r.rc.Status.Replicas, r.rc.Spec.Replicas))
+	if r.rc.Status.Replicas == r.rc.Spec.Replicas {
+		lreplicas.TextFgColor = termui.ColorGreen
+	} else {
+		lreplicas.TextFgColor = termui.ColorYellow
+	}
 	var tmplName string
 	if r.rc.Spec.Template != nil {
 		tmplName = r.rc.Spec.Template.Name

@@ -86,13 +86,15 @@ func (r node) toRow() *termui.Row {
 	lcpu := label(r.node.Status.Capacity.Cpu().String())
 	lmem := label(r.node.Status.Capacity.Memory().String())
 
-	var state string
-	for _, s := range r.node.Status.Conditions {
-		if s.Status == api.ConditionTrue {
-			state = string(s.Type)
-		}
+	lstate := label(string(r.node.Status.Phase))
+	switch r.node.Status.Phase {
+	case api.NodeRunning:
+		lstate.TextFgColor = termui.ColorGreen
+	case api.NodePending:
+		lstate.TextFgColor = termui.ColorYellow
+	case api.NodeTerminated:
+		lstate.TextFgColor = termui.ColorRed
 	}
-	lstate := label(state)
 
 	var addr string
 	for _, a := range r.node.Status.Addresses {
