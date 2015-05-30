@@ -49,6 +49,7 @@ func watchUpdates(c *client.Client, u *ui.UI) {
 		{resource: "pods", watch: c.WatchPods},
 		{resource: "services", watch: c.WatchServices},
 		{resource: "rcs", watch: c.WatchRCs},
+		{resource: "nodes", watch: c.WatchNodes},
 	}
 	var err error
 	for i, w := range watches {

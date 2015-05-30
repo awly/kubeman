@@ -38,6 +38,7 @@ func New(l *log.Logger) (*UI, error) {
 			"pods":     &podsTab{log: l, mu: &sync.Mutex{}},
 			"services": &servicesTab{log: l, mu: &sync.Mutex{}},
 			"rcs":      &rcsTab{log: l, mu: &sync.Mutex{}},
+			"nodes":    &nodesTab{log: l, mu: &sync.Mutex{}},
 		},
 		selected: "pods",
 		mu:       &sync.Mutex{},

@@ -80,3 +80,19 @@ func (c *Client) WatchRCs() (<-chan watch.Event, error) {
 	}
 	return w.ResultChan(), nil
 }
+
+func (c *Client) Nodes() ([]api.Node, error) {
+	pl, err := c.c.Nodes().List(labels.Everything(), fields.Everything())
+	if err != nil {
+		return nil, err
+	}
+	return pl.Items, nil
+}
+
+func (c *Client) WatchNodes() (<-chan watch.Event, error) {
+	w, err := c.c.Nodes().Watch(labels.Everything(), fields.Everything(), "")
+	if err != nil {
+		return nil, err
+	}
+	return w.ResultChan(), nil
+}
