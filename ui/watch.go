@@ -36,10 +36,6 @@ func (u *UI) watchUpdates() {
 			Chan: reflect.ValueOf(w.c),
 		})
 	}
-	cases = append(cases, reflect.SelectCase{
-		Dir:  reflect.SelectRecv,
-		Chan: reflect.ValueOf(u.ExitCh()),
-	})
 
 	for {
 		i, val, ok := reflect.Select(cases)
