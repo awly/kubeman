@@ -45,7 +45,10 @@ func (pr podItem) toRows() []*termui.Row {
 	case api.PodFailed, api.PodUnknown:
 		lstatus.TextFgColor = termui.ColorRed
 	}
-	lhost := label(pr.p.Spec.Host)
+	lhost := label(pr.p.Status.HostIP)
+	if pr.p.Status.HostIP == "" {
+		lhost.Text = pr.p.Status.PodIP
+	}
 
 	rows := make([]*termui.Row, 0, len(pr.p.Spec.Containers))
 	for i, c := range pr.p.Status.ContainerStatuses {
@@ -62,10 +65,10 @@ func (pr podItem) toRows() []*termui.Row {
 			lcontStatus.Text = "Running"
 			lcontStatus.TextFgColor = termui.ColorGreen
 			lcontStarted.Text = c.State.Running.StartedAt.Format(time.Stamp)
-		case c.State.Termination != nil:
+		case c.State.Terminated != nil:
 			lcontStatus.Text = "Terminated"
 			lcontStatus.TextFgColor = termui.ColorRed
-			lcontStarted.Text = c.State.Termination.StartedAt.String()
+			lcontStarted.Text = c.State.Terminated.StartedAt.String()
 		default:
 			lcontStatus.Text = "Waiting"
 			lcontStatus.TextFgColor = termui.ColorYellow

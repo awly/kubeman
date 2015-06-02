@@ -42,8 +42,8 @@ func (r rcItem) toRows() []*termui.Row {
 	if r.rc.Spec.Template != nil {
 		tmplName = r.rc.Spec.Template.Name
 	}
-	if r.rc.Spec.TemplateRef != nil {
-		tmplName = r.rc.Spec.TemplateRef.Name
+	if r.rc.Spec.Template != nil {
+		tmplName = r.rc.Spec.Template.Name
 	}
 	ltmpl := label(tmplName)
 

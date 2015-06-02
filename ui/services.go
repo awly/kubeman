@@ -32,12 +32,10 @@ type serviceItem struct {
 func (s serviceItem) toRows() []*termui.Row {
 	lname := label(s.service.Name)
 	ltype := label(string(s.service.Spec.Type))
-	lip := label(s.service.Spec.PortalIP)
+	lip := label(s.service.Spec.ClusterIP)
 
-	// TODO: seems like LoadBalancer field is WIP right now and is not
-	// populated. Remove the len check later.
-	if s.service.Spec.Type == api.ServiceTypeLoadBalancer && len(s.service.Status.LoadBalancer.Ingress) > 0 {
-		lip.Text = s.service.Status.LoadBalancer.Ingress[0].IP
+	if len(s.service.Spec.DeprecatedPublicIPs) > 0 {
+		lip.Text = s.service.Spec.DeprecatedPublicIPs[0]
 	}
 
 	rows := make([]*termui.Row, 0, len(s.service.Spec.Ports))
