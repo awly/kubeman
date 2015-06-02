@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"log"
+
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
 	"github.com/gizak/termui"
 )
@@ -13,7 +15,7 @@ type Event struct {
 
 func (ui *UI) eventLoop(ec <-chan termui.Event) {
 	for e := range ec {
-		ui.log.Printf("%+v", e)
+		log.Printf("%+v", e)
 		switch e.Type {
 		case termui.EventInterrupt:
 			close(ui.exitch)
@@ -76,13 +78,13 @@ func (ui *UI) updateLoop() {
 }
 
 func handleUpdate(ui *UI, e Event) {
-	ui.log.Printf("%+v", e)
+	log.Printf("%+v", e)
 	if e.Type == watch.Error {
 		return
 	}
 	t, ok := ui.tabs[e.Resource]
 	if !ok {
-		ui.log.Println("unsupported resource type", e.Resource)
+		log.Println("unsupported resource type", e.Resource)
 		return
 	}
 	t.dataUpdate(e)

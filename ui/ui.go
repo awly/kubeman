@@ -2,10 +2,10 @@ package ui
 
 import (
 	"fmt"
-	"log"
 	"sort"
 	"sync"
 
+	"github.com/alytvynov/kubeman/client"
 	"github.com/gizak/termui"
 	"github.com/nsf/termbox-go"
 )
@@ -15,19 +15,18 @@ type UI struct {
 
 	tabs     map[string]tab
 	selected string
-	log      *log.Logger
 	exitch   chan struct{}
+	api      client.Client
 
 	// protects selected and termui.Body
 	mu *sync.Mutex
 }
 
-func New(l *log.Logger) (*UI, error) {
+func New(c *client.Client) (*UI, error) {
 	uc := make(chan Event)
 	exitch := make(chan struct{})
 	ui := &UI{
 		Updates: uc,
-		log:     l,
 		exitch:  exitch,
 		tabs: map[string]tab{
 			"pods":     podsTab(),
@@ -49,6 +48,8 @@ func New(l *log.Logger) (*UI, error) {
 
 	ui.RedrawTabs()
 	ui.RedrawBody()
+
+	go ui.watchUpdates()
 
 	return ui, nil
 }
