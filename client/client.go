@@ -57,6 +57,10 @@ func (c *Client) Pods() ([]api.Pod, error) {
 	return pl.Items, nil
 }
 
+func (c *Client) StopPod(name string) error {
+	return c.c.Pods("default").Delete(name, nil)
+}
+
 func (c *Client) WatchPods() (<-chan watch.Event, error) {
 	w, err := c.c.Pods("default").Watch(labels.Everything(), fields.Everything(), "")
 	if err != nil {

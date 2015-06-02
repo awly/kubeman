@@ -1,12 +1,14 @@
 package ui
 
 import (
+	"log"
 	"reflect"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
+	"github.com/alytvynov/kubeman/client"
 	"github.com/gizak/termui"
 )
 
@@ -86,3 +88,15 @@ func (pr podItem) toRows() []*termui.Row {
 func (p *podItem) setData(d interface{})      { p.p = *d.(*api.Pod) }
 func (p podItem) sameData(d interface{}) bool { return p.p.Name == (*d.(*api.Pod)).Name }
 func (p podItem) less(i listItem) bool        { return p.p.Name < i.(*podItem).p.Name }
+
+func (p podItem) handleEvent(c *client.Client, e termui.Event) {
+	switch e.Type {
+	case termui.EventKey:
+		switch e.Ch {
+		case 'S':
+			if err := c.StopPod(p.p.Name); err != nil {
+				log.Println(err)
+			}
+		}
+	}
+}

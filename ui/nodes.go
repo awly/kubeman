@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
+	"github.com/alytvynov/kubeman/client"
 	"github.com/gizak/termui"
 )
 
@@ -63,3 +64,5 @@ func (r nodeItem) toRows() []*termui.Row {
 func (p *nodeItem) setData(d interface{})      { p.node = *d.(*api.Node) }
 func (p nodeItem) sameData(d interface{}) bool { return p.node.Name == (*d.(*api.Node)).Name }
 func (p nodeItem) less(i listItem) bool        { return p.node.Name < i.(*nodeItem).node.Name }
+
+func (p nodeItem) handleEvent(c *client.Client, e termui.Event) {}

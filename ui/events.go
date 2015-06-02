@@ -66,7 +66,7 @@ func (ui *UI) SelectTab(name string) {
 
 func (ui *UI) updateTabUI(e termui.Event) {
 	ui.mu.Lock()
-	ui.tabs[ui.selected].uiUpdate(e)
+	ui.tabs[ui.selected].uiUpdate(ui.api, e)
 	ui.mu.Unlock()
 	ui.RedrawBody()
 }
