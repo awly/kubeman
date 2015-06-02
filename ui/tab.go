@@ -71,24 +71,27 @@ func (pl *listTab) uiUpdate(e termui.Event) {
 func (pl *listTab) dataUpdate(e Event) {
 	pl.mu.Lock()
 	defer pl.mu.Unlock()
+	var existing listItem
+	var existingi int
+	for i, li := range pl.items {
+		if li.sameData(e.Data) {
+			existing = li
+			existingi = i
+			break
+		}
+	}
 	switch e.Type {
-	case watch.Added:
-		item := reflect.New(pl.itemType).Interface().(listItem)
-		item.setData(e.Data)
-		pl.items = append(pl.items, item)
-	case watch.Modified:
-		i := sort.Search(len(pl.items), func(n int) bool { return pl.items[n].sameData(e.Data) })
-		if i < len(pl.items) {
-			pl.items[i].setData(e.Data)
+	case watch.Added, watch.Modified:
+		if existing != nil {
+			existing.setData(e.Data)
 		} else {
 			item := reflect.New(pl.itemType).Interface().(listItem)
 			item.setData(e.Data)
 			pl.items = append(pl.items, item)
 		}
 	case watch.Deleted:
-		i := sort.Search(len(pl.items), func(n int) bool { return pl.items[n].sameData(e.Data) })
-		if i < len(pl.items) {
-			pl.Swap(i, pl.Len()-1)
+		if existing != nil {
+			pl.Swap(existingi, pl.Len()-1)
 			pl.items = pl.items[:pl.Len()-1]
 		}
 	}
