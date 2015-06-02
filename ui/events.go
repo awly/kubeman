@@ -71,12 +71,6 @@ func (ui *UI) updateTabUI(e termui.Event) {
 	ui.RedrawBody()
 }
 
-func (ui *UI) updateLoop() {
-	for e := range ui.Updates {
-		handleUpdate(ui, e)
-	}
-}
-
 func handleUpdate(ui *UI, e Event) {
 	log.Printf("%+v", e)
 	if e.Type == watch.Error {

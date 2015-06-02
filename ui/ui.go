@@ -11,23 +11,19 @@ import (
 )
 
 type UI struct {
-	Updates chan Event
-
 	tabs     map[string]tab
 	selected string
 	exitch   chan struct{}
-	api      client.Client
+	api      *client.Client
 
 	// protects selected and termui.Body
 	mu *sync.Mutex
 }
 
 func New(c *client.Client) (*UI, error) {
-	uc := make(chan Event)
 	exitch := make(chan struct{})
 	ui := &UI{
-		Updates: uc,
-		exitch:  exitch,
+		exitch: exitch,
 		tabs: map[string]tab{
 			"pods":     podsTab(),
 			"services": servicesTab(),
@@ -36,9 +32,9 @@ func New(c *client.Client) (*UI, error) {
 		},
 		selected: "pods",
 		mu:       &sync.Mutex{},
+		api:      c,
 	}
 
-	go ui.updateLoop()
 	go ui.eventLoop(termui.EventCh())
 
 	if err := termui.Init(); err != nil {

@@ -54,11 +54,11 @@ func (u *UI) watchUpdates() {
 			continue
 		}
 		e := val.Interface().(watch.Event)
-		u.Updates <- Event{
+		handleUpdate(u, Event{
 			Resource: w.resource,
 			Type:     e.Type,
 			Data:     e.Object,
-		}
+		})
 	}
 
 }
