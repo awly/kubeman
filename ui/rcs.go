@@ -22,7 +22,9 @@ func (rt *rcsTab) Len() int           { return len(rt.rcs) }
 func (rt *rcsTab) Less(i, j int) bool { return rt.rcs[i].rc.Name < rt.rcs[j].rc.Name }
 func (rt *rcsTab) Swap(i, j int)      { rt.rcs[i], rt.rcs[j] = rt.rcs[j], rt.rcs[i] }
 
-func (rt *rcsTab) update(e Event) {
+func (rt *rcsTab) uiUpdate(e termui.Event) {}
+
+func (rt *rcsTab) dataUpdate(e Event) {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
 	p := *e.Data.(*api.ReplicationController)

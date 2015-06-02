@@ -22,11 +22,6 @@ type UI struct {
 	mu *sync.Mutex
 }
 
-type tab interface {
-	update(Event)
-	toRows() []*termui.Row
-}
-
 func New(l *log.Logger) (*UI, error) {
 	uc := make(chan Event)
 	exitch := make(chan struct{})
@@ -35,7 +30,7 @@ func New(l *log.Logger) (*UI, error) {
 		log:     l,
 		exitch:  exitch,
 		tabs: map[string]tab{
-			"pods":     &podsTab{log: l, mu: &sync.Mutex{}},
+			"pods":     podsTab(),
 			"services": &servicesTab{log: l, mu: &sync.Mutex{}},
 			"rcs":      &rcsTab{log: l, mu: &sync.Mutex{}},
 			"nodes":    &nodesTab{log: l, mu: &sync.Mutex{}},
@@ -63,23 +58,27 @@ func (ui *UI) RedrawTabs() {
 	defer ui.mu.Unlock()
 	names := ui.tabNames()
 	tabCols := make([]*termui.Row, 0, len(names))
+	spaceCols := make([]*termui.Row, 0, len(names))
 	for i, n := range names {
 		l := label(fmt.Sprintf(" %d: %s ", i+1, n))
-		l.BgColor = termui.ColorBlue
+		l.TextBgColor = termui.ColorBlue
+		s := label("")
+		s.PaddingRight = 1
+		s.BgColor = termui.ColorBlue
 		if n == ui.selected {
 			l.Text += "* "
-			l.BgColor = termui.ColorCyan
-			l.TextBgColor = termui.ColorCyan
 			l.TextFgColor = termui.ColorDefault | termui.AttrBold
+			l.TextBgColor = termui.ColorCyan
+			s.BgColor = termui.ColorCyan
 		}
-		l.Height = 2
-		l.PaddingLeft = 1
 		tabCols = append(tabCols, termui.NewCol(12/len(ui.tabs), 0, l))
+		spaceCols = append(spaceCols, termui.NewCol(12/len(ui.tabs), 0, s))
 	}
-	if len(termui.Body.Rows) > 1 {
+	if len(termui.Body.Rows) > 2 {
 		termui.Body.Rows[0] = termui.NewRow(tabCols...)
+		termui.Body.Rows[1] = termui.NewRow(spaceCols...)
 	} else {
-		termui.Body.AddRows(termui.NewRow(tabCols...))
+		termui.Body.AddRows(termui.NewRow(tabCols...), termui.NewRow(spaceCols...))
 	}
 	termui.Body.Align()
 	termui.Render(termui.Body)
@@ -88,7 +87,7 @@ func (ui *UI) RedrawTabs() {
 func (ui *UI) RedrawBody() {
 	ui.mu.Lock()
 	defer ui.mu.Unlock()
-	termui.Body.Rows = append(termui.Body.Rows[:1], ui.tabs[ui.selected].toRows()...)
+	termui.Body.Rows = append(termui.Body.Rows[:2], ui.tabs[ui.selected].toRows()...)
 	termui.Body.Align()
 	termui.Render(termui.Body)
 }
@@ -116,12 +115,12 @@ func label(text string) *termui.Par {
 	l := termui.NewPar(text)
 	l.Height = 1
 	l.HasBorder = false
-	l.PaddingLeft = 1
 	return l
 }
 
 func header(text string) *termui.Par {
 	l := label(text)
 	l.TextFgColor = termui.ColorWhite | termui.AttrBold
+	l.PaddingLeft = 1
 	return l
 }

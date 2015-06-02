@@ -24,7 +24,9 @@ func (st *servicesTab) Swap(i, j int) {
 	st.services[i], st.services[j] = st.services[j], st.services[i]
 }
 
-func (st *servicesTab) update(e Event) {
+func (st *servicesTab) uiUpdate(e termui.Event) {}
+
+func (st *servicesTab) dataUpdate(e Event) {
 	st.mu.Lock()
 	defer st.mu.Unlock()
 	p := *e.Data.(*api.Service)

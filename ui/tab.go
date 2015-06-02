@@ -1,0 +1,127 @@
+package ui
+
+import (
+	"reflect"
+	"sort"
+	"sync"
+
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
+	"github.com/gizak/termui"
+)
+
+type tab interface {
+	dataUpdate(Event)
+	uiUpdate(termui.Event)
+	toRows() []*termui.Row
+}
+
+type listTab struct {
+	mu         *sync.Mutex
+	headerTmps []headerTmp
+	items      []listItem
+	itemType   reflect.Type
+	selected   int
+}
+
+type headerTmp struct {
+	name string
+	span int
+}
+
+func (h headerTmp) build() *termui.Row {
+	l := label(h.name)
+	l.TextFgColor = termui.ColorWhite | termui.AttrBold
+	l.PaddingLeft = 1
+	return termui.NewCol(h.span, 0, l)
+}
+
+type listItem interface {
+	toRows() []*termui.Row
+	setData(interface{})
+	sameData(interface{}) bool
+	less(listItem) bool
+}
+
+func (pl *listTab) Len() int           { return len(pl.items) }
+func (pl *listTab) Less(i, j int) bool { return pl.items[i].less(pl.items[j]) }
+func (pl *listTab) Swap(i, j int)      { pl.items[i], pl.items[j] = pl.items[j], pl.items[i] }
+
+func (pl *listTab) uiUpdate(e termui.Event) {
+	switch e.Type {
+	case termui.EventKey:
+		switch e.Key {
+		case termui.KeyArrowDown:
+			pl.mu.Lock()
+			pl.selected++
+			if pl.selected >= len(pl.items) {
+				pl.selected = len(pl.items) - 1
+			}
+			pl.mu.Unlock()
+		case termui.KeyArrowUp:
+			pl.mu.Lock()
+			pl.selected--
+			if pl.selected < 0 {
+				pl.selected = 0
+			}
+			pl.mu.Unlock()
+		}
+	}
+}
+
+func (pl *listTab) dataUpdate(e Event) {
+	pl.mu.Lock()
+	defer pl.mu.Unlock()
+	switch e.Type {
+	case watch.Added:
+		item := reflect.New(pl.itemType).Interface().(listItem)
+		item.setData(e.Data)
+		pl.items = append(pl.items, item)
+	case watch.Modified:
+		i := sort.Search(len(pl.items), func(n int) bool { return pl.items[n].sameData(e.Data) })
+		if i < len(pl.items) {
+			pl.items[i].setData(e.Data)
+		} else {
+			item := reflect.New(pl.itemType).Interface().(listItem)
+			item.setData(e.Data)
+			pl.items = append(pl.items, item)
+		}
+	case watch.Deleted:
+		i := sort.Search(len(pl.items), func(n int) bool { return pl.items[n].sameData(e.Data) })
+		if i < len(pl.items) {
+			pl.Swap(i, pl.Len()-1)
+			pl.items = pl.items[:pl.Len()-1]
+		}
+	}
+	sort.Sort(pl)
+}
+
+func (pl *listTab) toRows() []*termui.Row {
+	pl.mu.Lock()
+	defer pl.mu.Unlock()
+	rows := make([]*termui.Row, 0)
+
+	headerTmps := make([]*termui.Row, 0, len(pl.headerTmps))
+	for _, h := range pl.headerTmps {
+		headerTmps = append(headerTmps, h.build())
+	}
+
+	rows = append(rows, termui.NewRow(headerTmps...))
+	for i, p := range pl.items {
+		row := p.toRows()
+		for _, r := range row {
+			for _, c := range r.Cols {
+				if p, ok := c.Widget.(*termui.Par); ok {
+					// simulate padding without loosing bg color
+					p.Text = " " + p.Text
+					if i == pl.selected {
+						p.BgColor = termui.ColorCyan
+						p.TextFgColor = termui.ColorBlack
+						p.TextBgColor = termui.ColorCyan
+					}
+				}
+			}
+		}
+		rows = append(rows, row...)
+	}
+	return rows
+}

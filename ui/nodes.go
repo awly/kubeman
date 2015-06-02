@@ -21,7 +21,9 @@ func (rt *nodesTab) Len() int           { return len(rt.nodes) }
 func (rt *nodesTab) Less(i, j int) bool { return rt.nodes[i].node.Name < rt.nodes[j].node.Name }
 func (rt *nodesTab) Swap(i, j int)      { rt.nodes[i], rt.nodes[j] = rt.nodes[j], rt.nodes[i] }
 
-func (rt *nodesTab) update(e Event) {
+func (rt *nodesTab) uiUpdate(e termui.Event) {}
+
+func (rt *nodesTab) dataUpdate(e Event) {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
 	p := *e.Data.(*api.Node)

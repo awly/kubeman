@@ -1,93 +1,38 @@
 package ui
 
 import (
-	"log"
-	"sort"
+	"reflect"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
-	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
 	"github.com/gizak/termui"
 )
 
-type podsTab struct {
-	log *log.Logger
-
-	mu   *sync.Mutex
-	pods []pod
-}
-
-func (pl *podsTab) Len() int           { return len(pl.pods) }
-func (pl *podsTab) Less(i, j int) bool { return pl.pods[i].p.Name < pl.pods[j].p.Name }
-func (pl *podsTab) Swap(i, j int)      { pl.pods[i], pl.pods[j] = pl.pods[j], pl.pods[i] }
-
-func (pl *podsTab) update(e Event) {
-	pl.mu.Lock()
-	defer pl.mu.Unlock()
-	p := *e.Data.(*api.Pod)
-	switch e.Type {
-	case watch.Added:
-		pl.pods = append(pl.pods, pod{p: p})
-	case watch.Modified:
-		found := false
-		for i, up := range pl.pods {
-			if up.p.Name == p.Name {
-				found = true
-				pl.pods[i].p = p
-				break
-			}
-		}
-		if !found {
-			pl.pods = append(pl.pods, pod{p: p})
-		}
-	case watch.Deleted:
-		for i, up := range pl.pods {
-			if up.p.Name == p.Name {
-				pl.Swap(i, pl.Len()-1)
-				pl.pods = pl.pods[:pl.Len()-1]
-				break
-			}
-		}
+func podsTab() tab {
+	return &listTab{
+		mu:         &sync.Mutex{},
+		headerTmps: podHeaders,
+		itemType:   reflect.TypeOf(podItem{}),
 	}
-	sort.Sort(pl)
 }
 
-func (pl *podsTab) toRows() []*termui.Row {
-	pl.mu.Lock()
-	defer pl.mu.Unlock()
-	rows := make([]*termui.Row, 0)
-
-	// header
-	lname := header("name")
-	lstatus := header("status")
-	lhost := header("host")
-	lcont := header("container")
-	lcontStatus := header("cont status")
-	lcontStarted := header("started at")
-	lrestarts := header("restarts")
-
-	rows = append(rows, termui.NewRow(
-		termui.NewCol(3, 0, lname),
-		termui.NewCol(1, 0, lstatus),
-		termui.NewCol(2, 0, lhost),
-		termui.NewCol(3, 0, lcont),
-		termui.NewCol(1, 0, lcontStatus),
-		termui.NewCol(1, 0, lcontStarted),
-		termui.NewCol(1, 0, lrestarts),
-	))
-	for _, p := range pl.pods {
-		rows = append(rows, p.toRows()...)
-	}
-	return rows
+var podHeaders = []headerTmp{
+	{"name", 3},
+	{"status", 1},
+	{"host", 2},
+	{"container", 3},
+	{"cont status", 1},
+	{"started at", 1},
+	{"restarts", 1},
 }
 
-type pod struct {
+type podItem struct {
 	p api.Pod
 }
 
-func (pr pod) toRows() []*termui.Row {
+func (pr podItem) toRows() []*termui.Row {
 	lname := label(pr.p.Name)
 	lstatus := label(string(pr.p.Status.Phase))
 	switch pr.p.Status.Phase {
@@ -124,6 +69,7 @@ func (pr pod) toRows() []*termui.Row {
 			lcontStatus.TextFgColor = termui.ColorYellow
 		}
 		lrestarts := label(strconv.Itoa(c.RestartCount))
+
 		rows = append(rows, termui.NewRow(
 			termui.NewCol(3, 0, lname),
 			termui.NewCol(1, 0, lstatus),
@@ -136,3 +82,7 @@ func (pr pod) toRows() []*termui.Row {
 	}
 	return rows
 }
+
+func (p *podItem) setData(d interface{})      { p.p = *d.(*api.Pod) }
+func (p podItem) sameData(d interface{}) bool { return p.p.Name == (*d.(*api.Pod)).Name }
+func (p podItem) less(i listItem) bool        { return p.p.Name < i.(*podItem).p.Name }
