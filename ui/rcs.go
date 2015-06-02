@@ -2,87 +2,34 @@ package ui
 
 import (
 	"fmt"
-	"log"
+	"reflect"
 	"sort"
 	"sync"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
-	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
 	"github.com/gizak/termui"
 )
 
-type rcsTab struct {
-	log *log.Logger
-
-	mu  *sync.Mutex
-	rcs []rc
-}
-
-func (rt *rcsTab) Len() int           { return len(rt.rcs) }
-func (rt *rcsTab) Less(i, j int) bool { return rt.rcs[i].rc.Name < rt.rcs[j].rc.Name }
-func (rt *rcsTab) Swap(i, j int)      { rt.rcs[i], rt.rcs[j] = rt.rcs[j], rt.rcs[i] }
-
-func (rt *rcsTab) uiUpdate(e termui.Event) {}
-
-func (rt *rcsTab) dataUpdate(e Event) {
-	rt.mu.Lock()
-	defer rt.mu.Unlock()
-	p := *e.Data.(*api.ReplicationController)
-	switch e.Type {
-	case watch.Added:
-		rt.rcs = append(rt.rcs, rc{rc: p})
-	case watch.Modified:
-		found := false
-		for i, up := range rt.rcs {
-			if up.rc.Name == p.Name {
-				found = true
-				rt.rcs[i].rc = p
-				break
-			}
-		}
-		if !found {
-			rt.rcs = append(rt.rcs, rc{rc: p})
-		}
-	case watch.Deleted:
-		for i, up := range rt.rcs {
-			if up.rc.Name == p.Name {
-				rt.Swap(i, rt.Len()-1)
-				rt.rcs = rt.rcs[:rt.Len()-1]
-				break
-			}
-		}
+func rcsTab() tab {
+	return &listTab{
+		mu:         &sync.Mutex{},
+		headerTmps: rcHeaders,
+		itemType:   reflect.TypeOf(rcItem{}),
 	}
-	sort.Sort(rt)
 }
 
-func (rt *rcsTab) toRows() []*termui.Row {
-	rt.mu.Lock()
-	defer rt.mu.Unlock()
-	rows := make([]*termui.Row, 0)
-
-	// header
-	lname := header("name")
-	lreplicas := header("replicas")
-	ltmpl := header("template")
-	lselect := header("selectors")
-
-	rows = append(rows, termui.NewRow(
-		termui.NewCol(4, 0, lname),
-		termui.NewCol(1, 0, lreplicas),
-		termui.NewCol(3, 0, ltmpl),
-		termui.NewCol(4, 0, lselect),
-	))
-	for _, r := range rt.rcs {
-		rows = append(rows, r.toRows()...)
-	}
-	return rows
+var rcHeaders = []headerTmp{
+	{"name", 4},
+	{"replicas", 1},
+	{"template", 3},
+	{"selectors", 4},
 }
 
-type rc struct {
+type rcItem struct {
 	rc api.ReplicationController
 }
 
-func (r rc) toRows() []*termui.Row {
+func (r rcItem) toRows() []*termui.Row {
 	lname := label(r.rc.Name)
 	lreplicas := label(fmt.Sprintf("%d/%d", r.rc.Status.Replicas, r.rc.Spec.Replicas))
 	if r.rc.Status.Replicas == r.rc.Spec.Replicas {
@@ -124,3 +71,9 @@ func (r rc) toRows() []*termui.Row {
 
 	return rows
 }
+
+func (p *rcItem) setData(d interface{}) { p.rc = *d.(*api.ReplicationController) }
+func (p rcItem) sameData(d interface{}) bool {
+	return p.rc.Name == (*d.(*api.ReplicationController)).Name
+}
+func (p rcItem) less(i listItem) bool { return p.rc.Name < i.(*rcItem).rc.Name }
