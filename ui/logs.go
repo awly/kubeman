@@ -2,7 +2,6 @@ package ui
 
 import (
 	"bufio"
-	"io"
 	"log"
 	"time"
 
@@ -10,24 +9,35 @@ import (
 )
 
 type logTab struct {
-	in        io.ReadCloser
-	lines     []string
-	height    int
-	redraw    func()
-	uiUpdatef func(termui.Event)
-	cleanf    func()
+	ui *UI
+
+	closed chan struct{}
+	lines  []string
+	height int
 }
 
-func (lt *logTab) stream() {
-	defer lt.in.Close()
+func (lt *logTab) stream(pod, cont string) {
+	in, err := lt.ui.api.Logs(pod, cont, true)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer in.Close()
+	log.Println(pod, cont, "log stream opened")
 	go func() {
 		t := time.NewTicker(100 * time.Millisecond)
 		defer t.Stop()
-		for range t.C {
-			lt.redraw()
+		for {
+			select {
+			case <-t.C:
+				lt.ui.redrawBody()
+			case <-lt.closed:
+				in.Close()
+				return
+			}
 		}
 	}()
-	s := bufio.NewScanner(lt.in)
+	s := bufio.NewScanner(in)
 	for s.Scan() {
 		lt.lines = append(lt.lines, s.Text())
 		if len(lt.lines) > lt.height {
@@ -37,11 +47,16 @@ func (lt *logTab) stream() {
 	if s.Err() != nil {
 		log.Println(s.Err())
 	}
-	log.Println("log source closed")
+	log.Println(pod, cont, "log stream closed")
 }
 
-func (lt logTab) dataUpdate(e Event)      {}
-func (lt logTab) uiUpdate(e termui.Event) { lt.uiUpdatef(e) }
+func (lt logTab) dataUpdate(e Event) {}
+func (lt logTab) uiUpdate(e termui.Event) {
+	switch e.Ch {
+	case 'l':
+		go lt.ui.SelectTab("pods")
+	}
+}
 
 func (lt logTab) toRows() []*termui.Row {
 	rows := make([]*termui.Row, 0, len(lt.lines))
@@ -52,6 +67,5 @@ func (lt logTab) toRows() []*termui.Row {
 }
 
 func (lt *logTab) clean() {
-	lt.in.Close()
-	lt.cleanf()
+	close(lt.closed)
 }

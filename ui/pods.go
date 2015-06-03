@@ -33,7 +33,6 @@ var podHeaders = []header{
 type podItem struct {
 	p  api.Pod
 	ui *UI
-	lt *logTab
 }
 
 func (pr podItem) toRows() []*termui.Row {
@@ -104,34 +103,17 @@ func (p *podItem) handleEvent(e termui.Event) {
 				log.Println(err)
 			}
 		case 'l':
-			if p.lt != nil {
-				p.ui.selected = "pods"
-				p.ui.body = p.ui.tabs["pods"]
-				p.lt.clean()
-			} else {
-				p.streamLogs()
-			}
+			p.streamLogs()
 		}
 	}
 }
 
 func (pi *podItem) streamLogs() {
-	s, err := pi.ui.api.Logs(pi.p.Name, pi.p.Spec.Containers[0].Name, true)
-	if err != nil {
-		log.Println(err)
-		return
-	}
 	lt := &logTab{
-		in:        s,
-		height:    termui.TermHeight() - 2,
-		redraw:    pi.ui.redrawBody,
-		uiUpdatef: pi.handleEvent,
+		ui:     pi.ui,
+		closed: make(chan struct{}),
+		height: termui.TermHeight() - 2,
 	}
-	lt.cleanf = func() {
-		delete(pi.ui.tabs, "logs")
-		pi.lt = nil
-	}
-	pi.lt = lt
 	pi.ui.body = lt
-	go lt.stream()
+	go lt.stream(pi.p.Name, pi.p.Spec.Containers[0].Name)
 }
