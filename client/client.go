@@ -1,6 +1,9 @@
 package client
 
 import (
+	"io"
+	"strconv"
+
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/client"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/client/clientcmd"
@@ -99,4 +102,15 @@ func (c *Client) WatchNodes() (<-chan watch.Event, error) {
 		return nil, err
 	}
 	return w.ResultChan(), nil
+}
+
+func (c *Client) Logs(pod, cont string, follow bool) (io.ReadCloser, error) {
+	return c.c.RESTClient.Get().
+		Namespace("default").
+		Name(pod).
+		Resource("pods").
+		SubResource("log").
+		Param("follow", strconv.FormatBool(follow)).
+		Param("container", cont).
+		Stream()
 }
