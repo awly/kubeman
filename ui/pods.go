@@ -103,17 +103,7 @@ func (p *podItem) handleEvent(e termui.Event) {
 				log.Println(err)
 			}
 		case 'l':
-			p.streamLogs()
+			showLogTab(p.ui, p.p)
 		}
 	}
-}
-
-func (pi *podItem) streamLogs() {
-	lt := &logTab{
-		ui:     pi.ui,
-		closed: make(chan struct{}),
-		height: termui.TermHeight() - 2,
-	}
-	pi.ui.body = lt
-	go lt.stream(pi.p.Name, pi.p.Spec.Containers[0].Name)
 }
