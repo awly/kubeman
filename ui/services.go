@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
-	"github.com/alytvynov/kubeman/client"
 	"github.com/gizak/termui"
 )
 
@@ -63,4 +62,4 @@ func (p *serviceItem) setData(d interface{})      { p.service = *d.(*api.Service
 func (p serviceItem) sameData(d interface{}) bool { return p.service.Name == (*d.(*api.Service)).Name }
 func (p serviceItem) less(i listItem) bool        { return p.service.Name < i.(*serviceItem).service.Name }
 
-func (p serviceItem) handleEvent(c *client.Client, e termui.Event) {}
+func (p serviceItem) handleEvent(e termui.Event) {}

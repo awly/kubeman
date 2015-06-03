@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
-	"github.com/alytvynov/kubeman/client"
 	"github.com/gizak/termui"
 )
 
@@ -82,4 +81,4 @@ func (p rcItem) sameData(d interface{}) bool {
 }
 func (p rcItem) less(i listItem) bool { return p.rc.Name < i.(*rcItem).rc.Name }
 
-func (p rcItem) handleEvent(c *client.Client, e termui.Event) {}
+func (p rcItem) handleEvent(e termui.Event) {}

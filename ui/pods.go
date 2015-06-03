@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
-	"github.com/alytvynov/kubeman/client"
 	"github.com/gizak/termui"
 )
 
@@ -34,6 +33,7 @@ var podHeaders = []header{
 type podItem struct {
 	p  api.Pod
 	ui *UI
+	lt *logTab
 }
 
 func (pr podItem) toRows() []*termui.Row {
@@ -95,14 +95,41 @@ func (p *podItem) setData(d interface{})      { p.p = *d.(*api.Pod) }
 func (p podItem) sameData(d interface{}) bool { return p.p.Name == (*d.(*api.Pod)).Name }
 func (p podItem) less(i listItem) bool        { return p.p.Name < i.(*podItem).p.Name }
 
-func (p podItem) handleEvent(c *client.Client, e termui.Event) {
+func (p *podItem) handleEvent(e termui.Event) {
 	switch e.Type {
 	case termui.EventKey:
 		switch e.Ch {
 		case 'S':
-			if err := c.StopPod(p.p.Name); err != nil {
+			if err := p.ui.api.StopPod(p.p.Name); err != nil {
 				log.Println(err)
+			}
+		case 'l':
+			if p.lt != nil {
+				p.lt.close()
+				p.ui.selected = "pods"
+				delete(p.ui.tabs, "logs")
+				p.lt = nil
+			} else {
+				p.streamLogs()
 			}
 		}
 	}
+}
+
+func (pi *podItem) streamLogs() {
+	s, err := pi.ui.api.Logs(pi.p.Name, pi.p.Spec.Containers[0].Name, true)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	lt := &logTab{
+		in:        s,
+		height:    termui.TermHeight() - 2,
+		redraw:    pi.ui.redrawBody,
+		uiUpdatef: pi.handleEvent,
+	}
+	pi.lt = lt
+	pi.ui.tabs["logs"] = lt
+	pi.ui.selected = "logs"
+	go lt.stream()
 }

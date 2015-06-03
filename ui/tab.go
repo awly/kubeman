@@ -6,13 +6,12 @@ import (
 	"sync"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
-	"github.com/alytvynov/kubeman/client"
 	"github.com/gizak/termui"
 )
 
 type tab interface {
 	dataUpdate(Event)
-	uiUpdate(*client.Client, termui.Event)
+	uiUpdate(termui.Event)
 	toRows() []*termui.Row
 }
 
@@ -44,14 +43,14 @@ type listItem interface {
 	setData(interface{})
 	sameData(interface{}) bool
 	less(listItem) bool
-	handleEvent(*client.Client, termui.Event)
+	handleEvent(termui.Event)
 }
 
 func (pl *listTab) Len() int           { return len(pl.items) }
 func (pl *listTab) Less(i, j int) bool { return pl.items[i].less(pl.items[j]) }
 func (pl *listTab) Swap(i, j int)      { pl.items[i], pl.items[j] = pl.items[j], pl.items[i] }
 
-func (pl *listTab) uiUpdate(c *client.Client, e termui.Event) {
+func (pl *listTab) uiUpdate(e termui.Event) {
 	switch e.Type {
 	case termui.EventKey:
 		switch e.Key {
@@ -76,7 +75,7 @@ func (pl *listTab) uiUpdate(c *client.Client, e termui.Event) {
 		}
 	}
 	if len(pl.items) > 0 {
-		pl.items[pl.selected].handleEvent(c, e)
+		pl.items[pl.selected].handleEvent(e)
 	}
 }
 
