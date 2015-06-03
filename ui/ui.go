@@ -73,7 +73,7 @@ func (ui *UI) redrawTabs() {
 		tabCols = append(tabCols, termui.NewCol(12/len(ui.tabs), 0, l))
 		spaceCols = append(spaceCols, termui.NewCol(12/len(ui.tabs), 0, s))
 	}
-	if len(termui.Body.Rows) > 2 {
+	if len(termui.Body.Rows) >= 2 {
 		termui.Body.Rows[0] = termui.NewRow(tabCols...)
 		termui.Body.Rows[1] = termui.NewRow(spaceCols...)
 	} else {

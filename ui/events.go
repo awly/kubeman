@@ -40,7 +40,8 @@ func (ui *UI) eventLoop(ec <-chan termui.Event) {
 				if int(i) >= len(tabs) {
 					continue
 				}
-				ui.SelectTab(ui.tabNames()[i])
+				log.Println("select tab i:", i, "name:", tabs[i])
+				ui.SelectTab(tabs[i])
 				continue
 			}
 			ui.updateTabUI(e)
