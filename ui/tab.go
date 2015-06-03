@@ -13,6 +13,7 @@ type tab interface {
 	dataUpdate(Event)
 	uiUpdate(termui.Event)
 	toRows() []*termui.Row
+	clean()
 }
 
 type listTab struct {
@@ -142,3 +143,5 @@ func (pl *listTab) toRows() []*termui.Row {
 	}
 	return rows
 }
+
+func (pl listTab) clean() {}

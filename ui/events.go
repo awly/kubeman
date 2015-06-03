@@ -58,7 +58,9 @@ func (ui *UI) eventLoop(ec <-chan termui.Event) {
 
 func (ui *UI) SelectTab(name string) {
 	ui.mu.Lock()
+	ui.body.clean()
 	ui.selected = name
+	ui.body = ui.tabs[ui.selected]
 	ui.mu.Unlock()
 	ui.redrawTabs()
 	ui.redrawBody()
@@ -66,7 +68,7 @@ func (ui *UI) SelectTab(name string) {
 
 func (ui *UI) updateTabUI(e termui.Event) {
 	ui.mu.Lock()
-	ui.tabs[ui.selected].uiUpdate(e)
+	ui.body.uiUpdate(e)
 	ui.mu.Unlock()
 }
 

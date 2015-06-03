@@ -13,6 +13,7 @@ import (
 type UI struct {
 	tabs     map[string]tab
 	selected string
+	body     tab
 	exitch   chan struct{}
 	api      *client.Client
 
@@ -34,6 +35,7 @@ func New(c *client.Client) (*UI, error) {
 		"rcs":      rcsTab(ui),
 		"nodes":    nodesTab(ui),
 	}
+	ui.body = ui.tabs[ui.selected]
 
 	go ui.eventLoop(termui.EventCh())
 
@@ -84,7 +86,7 @@ func (ui *UI) redrawTabs() {
 func (ui *UI) redrawBody() {
 	ui.mu.Lock()
 	defer ui.mu.Unlock()
-	termui.Body.Rows = append(termui.Body.Rows[:2], ui.tabs[ui.selected].toRows()...)
+	termui.Body.Rows = append(termui.Body.Rows[:2], ui.body.toRows()...)
 	termui.Body.Align()
 	termui.Render(termui.Body)
 }

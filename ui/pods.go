@@ -105,10 +105,9 @@ func (p *podItem) handleEvent(e termui.Event) {
 			}
 		case 'l':
 			if p.lt != nil {
-				p.lt.close()
 				p.ui.selected = "pods"
-				delete(p.ui.tabs, "logs")
-				p.lt = nil
+				p.ui.body = p.ui.tabs["pods"]
+				p.lt.clean()
 			} else {
 				p.streamLogs()
 			}
@@ -128,8 +127,11 @@ func (pi *podItem) streamLogs() {
 		redraw:    pi.ui.redrawBody,
 		uiUpdatef: pi.handleEvent,
 	}
+	lt.cleanf = func() {
+		delete(pi.ui.tabs, "logs")
+		pi.lt = nil
+	}
 	pi.lt = lt
-	pi.ui.tabs["logs"] = lt
-	pi.ui.selected = "logs"
+	pi.ui.body = lt
 	go lt.stream()
 }

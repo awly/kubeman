@@ -15,6 +15,7 @@ type logTab struct {
 	height    int
 	redraw    func()
 	uiUpdatef func(termui.Event)
+	cleanf    func()
 }
 
 func (lt *logTab) stream() {
@@ -50,6 +51,7 @@ func (lt logTab) toRows() []*termui.Row {
 	return rows
 }
 
-func (lt *logTab) close() {
+func (lt *logTab) clean() {
 	lt.in.Close()
+	lt.cleanf()
 }
