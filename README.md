@@ -16,8 +16,6 @@ And this:
 
 TODO:
 
-- navigation
-- log streaming
 - status management (create, stop, resize, etc.)
 - stats charts
 - help page
