@@ -23,16 +23,16 @@ type UI struct {
 func New(c *client.Client) (*UI, error) {
 	exitch := make(chan struct{})
 	ui := &UI{
-		exitch: exitch,
-		tabs: map[string]tab{
-			"pods":     podsTab(),
-			"services": servicesTab(),
-			"rcs":      rcsTab(),
-			"nodes":    nodesTab(),
-		},
+		exitch:   exitch,
 		selected: "pods",
 		mu:       &sync.Mutex{},
 		api:      c,
+	}
+	ui.tabs = map[string]tab{
+		"pods":     podsTab(ui),
+		"services": servicesTab(ui),
+		"rcs":      rcsTab(ui),
+		"nodes":    nodesTab(ui),
 	}
 
 	go ui.eventLoop(termui.EventCh())

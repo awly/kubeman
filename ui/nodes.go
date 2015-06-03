@@ -9,8 +9,9 @@ import (
 	"github.com/gizak/termui"
 )
 
-func nodesTab() tab {
+func nodesTab(ui *UI) tab {
 	return &listTab{
+		ui:       ui,
 		mu:       &sync.Mutex{},
 		headers:  nodeHeaders,
 		itemType: reflect.TypeOf(nodeItem{}),
@@ -27,6 +28,7 @@ var nodeHeaders = []header{
 
 type nodeItem struct {
 	node api.Node
+	ui   *UI
 }
 
 func (r nodeItem) toRows() []*termui.Row {
@@ -61,6 +63,7 @@ func (r nodeItem) toRows() []*termui.Row {
 	)}
 }
 
+func (p *nodeItem) init(ui *UI)                { p.ui = ui }
 func (p *nodeItem) setData(d interface{})      { p.node = *d.(*api.Node) }
 func (p nodeItem) sameData(d interface{}) bool { return p.node.Name == (*d.(*api.Node)).Name }
 func (p nodeItem) less(i listItem) bool        { return p.node.Name < i.(*nodeItem).node.Name }

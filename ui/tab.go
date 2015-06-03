@@ -17,6 +17,8 @@ type tab interface {
 }
 
 type listTab struct {
+	ui *UI
+
 	mu       *sync.Mutex
 	headers  []header
 	items    []listItem
@@ -38,6 +40,7 @@ func (h header) build() *termui.Row {
 
 type listItem interface {
 	toRows() []*termui.Row
+	init(*UI)
 	setData(interface{})
 	sameData(interface{}) bool
 	less(listItem) bool
@@ -59,6 +62,7 @@ func (pl *listTab) uiUpdate(c *client.Client, e termui.Event) {
 				pl.selected = len(pl.items) - 1
 			}
 			pl.mu.Unlock()
+			go pl.ui.redrawBody()
 			return
 		case termui.KeyArrowUp:
 			pl.mu.Lock()
@@ -67,6 +71,7 @@ func (pl *listTab) uiUpdate(c *client.Client, e termui.Event) {
 				pl.selected = 0
 			}
 			pl.mu.Unlock()
+			go pl.ui.redrawBody()
 			return
 		}
 	}
@@ -93,6 +98,7 @@ func (pl *listTab) dataUpdate(e Event) {
 			existing.setData(e.Data)
 		} else {
 			item := reflect.New(pl.itemType).Interface().(listItem)
+			item.init(pl.ui)
 			item.setData(e.Data)
 			pl.items = append(pl.items, item)
 		}
@@ -103,6 +109,8 @@ func (pl *listTab) dataUpdate(e Event) {
 		}
 	}
 	sort.Sort(pl)
+
+	go pl.ui.redrawBody()
 }
 
 func (pl *listTab) toRows() []*termui.Row {

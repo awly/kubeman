@@ -10,8 +10,9 @@ import (
 	"github.com/gizak/termui"
 )
 
-func servicesTab() tab {
+func servicesTab(ui *UI) tab {
 	return &listTab{
+		ui:       ui,
 		mu:       &sync.Mutex{},
 		headers:  serviceHeaders,
 		itemType: reflect.TypeOf(serviceItem{}),
@@ -27,6 +28,7 @@ var serviceHeaders = []header{
 
 type serviceItem struct {
 	service api.Service
+	ui      *UI
 }
 
 func (s serviceItem) toRows() []*termui.Row {
@@ -56,6 +58,7 @@ func (s serviceItem) toRows() []*termui.Row {
 	return rows
 }
 
+func (p *serviceItem) init(ui *UI)                { p.ui = ui }
 func (p *serviceItem) setData(d interface{})      { p.service = *d.(*api.Service) }
 func (p serviceItem) sameData(d interface{}) bool { return p.service.Name == (*d.(*api.Service)).Name }
 func (p serviceItem) less(i listItem) bool        { return p.service.Name < i.(*serviceItem).service.Name }

@@ -11,8 +11,9 @@ import (
 	"github.com/gizak/termui"
 )
 
-func rcsTab() tab {
+func rcsTab(ui *UI) tab {
 	return &listTab{
+		ui:       ui,
 		mu:       &sync.Mutex{},
 		headers:  rcHeaders,
 		itemType: reflect.TypeOf(rcItem{}),
@@ -28,6 +29,7 @@ var rcHeaders = []header{
 
 type rcItem struct {
 	rc api.ReplicationController
+	ui *UI
 }
 
 func (r rcItem) toRows() []*termui.Row {
@@ -73,6 +75,7 @@ func (r rcItem) toRows() []*termui.Row {
 	return rows
 }
 
+func (p *rcItem) init(ui *UI)           { p.ui = ui }
 func (p *rcItem) setData(d interface{}) { p.rc = *d.(*api.ReplicationController) }
 func (p rcItem) sameData(d interface{}) bool {
 	return p.rc.Name == (*d.(*api.ReplicationController)).Name

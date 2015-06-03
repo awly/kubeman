@@ -68,7 +68,6 @@ func (ui *UI) updateTabUI(e termui.Event) {
 	ui.mu.Lock()
 	ui.tabs[ui.selected].uiUpdate(ui.api, e)
 	ui.mu.Unlock()
-	ui.redrawBody()
 }
 
 func handleUpdate(ui *UI, e Event) {
@@ -82,5 +81,4 @@ func handleUpdate(ui *UI, e Event) {
 		return
 	}
 	t.dataUpdate(e)
-	ui.redrawBody()
 }

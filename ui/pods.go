@@ -12,8 +12,9 @@ import (
 	"github.com/gizak/termui"
 )
 
-func podsTab() tab {
+func podsTab(ui *UI) tab {
 	return &listTab{
+		ui:       ui,
 		mu:       &sync.Mutex{},
 		headers:  podHeaders,
 		itemType: reflect.TypeOf(podItem{}),
@@ -31,7 +32,8 @@ var podHeaders = []header{
 }
 
 type podItem struct {
-	p api.Pod
+	p  api.Pod
+	ui *UI
 }
 
 func (pr podItem) toRows() []*termui.Row {
@@ -88,6 +90,7 @@ func (pr podItem) toRows() []*termui.Row {
 	return rows
 }
 
+func (p *podItem) init(ui *UI)                { p.ui = ui }
 func (p *podItem) setData(d interface{})      { p.p = *d.(*api.Pod) }
 func (p podItem) sameData(d interface{}) bool { return p.p.Name == (*d.(*api.Pod)).Name }
 func (p podItem) less(i listItem) bool        { return p.p.Name < i.(*podItem).p.Name }
