@@ -12,13 +12,13 @@ import (
 
 func servicesTab() tab {
 	return &listTab{
-		mu:         &sync.Mutex{},
-		headerTmps: serviceHeaders,
-		itemType:   reflect.TypeOf(serviceItem{}),
+		mu:       &sync.Mutex{},
+		headers:  serviceHeaders,
+		itemType: reflect.TypeOf(serviceItem{}),
 	}
 }
 
-var serviceHeaders = []headerTmp{
+var serviceHeaders = []header{
 	{"name", 4},
 	{"type", 2},
 	{"ip", 3},

@@ -13,13 +13,13 @@ import (
 
 func rcsTab() tab {
 	return &listTab{
-		mu:         &sync.Mutex{},
-		headerTmps: rcHeaders,
-		itemType:   reflect.TypeOf(rcItem{}),
+		mu:       &sync.Mutex{},
+		headers:  rcHeaders,
+		itemType: reflect.TypeOf(rcItem{}),
 	}
 }
 
-var rcHeaders = []headerTmp{
+var rcHeaders = []header{
 	{"name", 4},
 	{"replicas", 1},
 	{"template", 3},

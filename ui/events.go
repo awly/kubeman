@@ -24,8 +24,8 @@ func (ui *UI) eventLoop(ec <-chan termui.Event) {
 			ui.mu.Lock()
 			termui.Body.Width = termui.TermWidth()
 			ui.mu.Unlock()
-			ui.RedrawTabs()
-			ui.RedrawBody()
+			ui.redrawTabs()
+			ui.redrawBody()
 		case termui.EventError:
 			close(ui.exitch)
 			return
@@ -60,15 +60,15 @@ func (ui *UI) SelectTab(name string) {
 	ui.mu.Lock()
 	ui.selected = name
 	ui.mu.Unlock()
-	ui.RedrawTabs()
-	ui.RedrawBody()
+	ui.redrawTabs()
+	ui.redrawBody()
 }
 
 func (ui *UI) updateTabUI(e termui.Event) {
 	ui.mu.Lock()
 	ui.tabs[ui.selected].uiUpdate(ui.api, e)
 	ui.mu.Unlock()
-	ui.RedrawBody()
+	ui.redrawBody()
 }
 
 func handleUpdate(ui *UI, e Event) {
@@ -82,5 +82,5 @@ func handleUpdate(ui *UI, e Event) {
 		return
 	}
 	t.dataUpdate(e)
-	ui.RedrawBody()
+	ui.redrawBody()
 }

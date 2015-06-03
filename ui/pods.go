@@ -14,13 +14,13 @@ import (
 
 func podsTab() tab {
 	return &listTab{
-		mu:         &sync.Mutex{},
-		headerTmps: podHeaders,
-		itemType:   reflect.TypeOf(podItem{}),
+		mu:       &sync.Mutex{},
+		headers:  podHeaders,
+		itemType: reflect.TypeOf(podItem{}),
 	}
 }
 
-var podHeaders = []headerTmp{
+var podHeaders = []header{
 	{"name", 3},
 	{"status", 1},
 	{"host", 2},

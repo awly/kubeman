@@ -11,13 +11,13 @@ import (
 
 func nodesTab() tab {
 	return &listTab{
-		mu:         &sync.Mutex{},
-		headerTmps: nodeHeaders,
-		itemType:   reflect.TypeOf(nodeItem{}),
+		mu:       &sync.Mutex{},
+		headers:  nodeHeaders,
+		itemType: reflect.TypeOf(nodeItem{}),
 	}
 }
 
-var nodeHeaders = []headerTmp{
+var nodeHeaders = []header{
 	{"name", 4},
 	{"state", 2},
 	{"ip", 2},

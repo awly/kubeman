@@ -17,19 +17,19 @@ type tab interface {
 }
 
 type listTab struct {
-	mu         *sync.Mutex
-	headerTmps []headerTmp
-	items      []listItem
-	itemType   reflect.Type
-	selected   int
+	mu       *sync.Mutex
+	headers  []header
+	items    []listItem
+	itemType reflect.Type
+	selected int
 }
 
-type headerTmp struct {
+type header struct {
 	name string
 	span int
 }
 
-func (h headerTmp) build() *termui.Row {
+func (h header) build() *termui.Row {
 	l := label(h.name)
 	l.TextFgColor = termui.ColorWhite | termui.AttrBold
 	l.PaddingLeft = 1
@@ -110,8 +110,8 @@ func (pl *listTab) toRows() []*termui.Row {
 	defer pl.mu.Unlock()
 	rows := make([]*termui.Row, 0)
 
-	headerTmps := make([]*termui.Row, 0, len(pl.headerTmps))
-	for _, h := range pl.headerTmps {
+	headerTmps := make([]*termui.Row, 0, len(pl.headers))
+	for _, h := range pl.headers {
 		headerTmps = append(headerTmps, h.build())
 	}
 

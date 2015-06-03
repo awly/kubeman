@@ -42,15 +42,15 @@ func New(c *client.Client) (*UI, error) {
 	}
 	termbox.SetInputMode(termbox.InputCurrent | termbox.InputMouse)
 
-	ui.RedrawTabs()
-	ui.RedrawBody()
+	ui.redrawTabs()
+	ui.redrawBody()
 
 	go ui.watchUpdates()
 
 	return ui, nil
 }
 
-func (ui *UI) RedrawTabs() {
+func (ui *UI) redrawTabs() {
 	ui.mu.Lock()
 	defer ui.mu.Unlock()
 	names := ui.tabNames()
@@ -81,7 +81,7 @@ func (ui *UI) RedrawTabs() {
 	termui.Render(termui.Body)
 }
 
-func (ui *UI) RedrawBody() {
+func (ui *UI) redrawBody() {
 	ui.mu.Lock()
 	defer ui.mu.Unlock()
 	termui.Body.Rows = append(termui.Body.Rows[:2], ui.tabs[ui.selected].toRows()...)
@@ -112,12 +112,5 @@ func label(text string) *termui.Par {
 	l := termui.NewPar(text)
 	l.Height = 1
 	l.HasBorder = false
-	return l
-}
-
-func header(text string) *termui.Par {
-	l := label(text)
-	l.TextFgColor = termui.ColorWhite | termui.AttrBold
-	l.PaddingLeft = 1
 	return l
 }
