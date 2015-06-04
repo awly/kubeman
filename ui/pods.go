@@ -86,6 +86,17 @@ func (pr podItem) toRows() []*termui.Row {
 			termui.NewCol(1, 0, lrestarts),
 		))
 	}
+	if len(rows) == 0 {
+		rows = append(rows, termui.NewRow(
+			termui.NewCol(3, 0, lname),
+			termui.NewCol(1, 0, lstatus),
+			termui.NewCol(2, 0, lhost),
+			termui.NewCol(3, 0, label("")),
+			termui.NewCol(1, 0, label("")),
+			termui.NewCol(1, 0, label("")),
+			termui.NewCol(1, 0, label("")),
+		))
+	}
 	return rows
 }
 
