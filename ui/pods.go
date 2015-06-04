@@ -24,9 +24,9 @@ var podHeaders = []header{
 	{"name", 3},
 	{"status", 1},
 	{"host", 2},
-	{"container", 3},
+	{"container", 2},
 	{"cont status", 1},
-	{"started at", 1},
+	{"started at", 2},
 	{"restarts", 1},
 }
 
@@ -69,7 +69,7 @@ func (pr podItem) toRows() []*termui.Row {
 		case c.State.Terminated != nil:
 			lcontStatus.Text = "Terminated"
 			lcontStatus.TextFgColor = termui.ColorRed
-			lcontStarted.Text = c.State.Terminated.StartedAt.String()
+			lcontStarted.Text = c.State.Terminated.StartedAt.Format(time.Stamp)
 		default:
 			lcontStatus.Text = "Waiting"
 			lcontStatus.TextFgColor = termui.ColorYellow
@@ -80,9 +80,9 @@ func (pr podItem) toRows() []*termui.Row {
 			termui.NewCol(3, 0, lname),
 			termui.NewCol(1, 0, lstatus),
 			termui.NewCol(2, 0, lhost),
-			termui.NewCol(3, 0, lcont),
+			termui.NewCol(2, 0, lcont),
 			termui.NewCol(1, 0, lcontStatus),
-			termui.NewCol(1, 0, lcontStarted),
+			termui.NewCol(2, 0, lcontStarted),
 			termui.NewCol(1, 0, lrestarts),
 		))
 	}
@@ -91,9 +91,9 @@ func (pr podItem) toRows() []*termui.Row {
 			termui.NewCol(3, 0, lname),
 			termui.NewCol(1, 0, lstatus),
 			termui.NewCol(2, 0, lhost),
-			termui.NewCol(3, 0, label("")),
+			termui.NewCol(2, 0, label("")),
 			termui.NewCol(1, 0, label("")),
-			termui.NewCol(1, 0, label("")),
+			termui.NewCol(2, 0, label("")),
 			termui.NewCol(1, 0, label("")),
 		))
 	}
