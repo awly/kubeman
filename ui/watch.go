@@ -25,6 +25,7 @@ func (u *UI) watchUpdates() {
 		watches[i].c, err = w.watch()
 		if err != nil {
 			log.Println(err)
+			close(u.exitch)
 			return
 		}
 	}
@@ -45,7 +46,6 @@ func (u *UI) watchUpdates() {
 			w.c, err = w.watch()
 			if err != nil {
 				log.Println(err)
-				return
 			}
 			continue
 		}
