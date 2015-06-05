@@ -18,6 +18,7 @@ type Client struct {
 }
 
 func Connect() (*Client, error) {
+	clientcmd.DefaultCluster.Server = ""
 	opts := config.NewDefaultPathOptions()
 	tconf, err := opts.GetStartingConfig()
 	if err != nil {
