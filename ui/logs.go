@@ -16,6 +16,7 @@ type logTab struct {
 	closed chan struct{}
 	mu     *sync.Mutex
 	lines  []string
+	offs   int
 	height int
 }
 
@@ -60,7 +61,7 @@ func (lt *logTab) stream(pod, cont string) {
 		lt.mu.Lock()
 		lt.lines = append(lt.lines, s.Text())
 		if len(lt.lines) > lt.height {
-			lt.lines = lt.lines[1:]
+			lt.offs = len(lt.lines) - lt.height
 		}
 		lt.mu.Unlock()
 	}
@@ -71,7 +72,39 @@ func (lt *logTab) stream(pod, cont string) {
 }
 
 func (lt logTab) dataUpdate(e Event) {}
-func (lt logTab) uiUpdate(e termui.Event) {
+func (lt *logTab) uiUpdate(e termui.Event) {
+	switch e.Key {
+	case termui.KeyArrowUp:
+		lt.mu.Lock()
+		if lt.offs > 0 {
+			lt.offs--
+		}
+		lt.mu.Unlock()
+		go lt.ui.redrawBody()
+	case termui.KeyArrowDown:
+		lt.mu.Lock()
+		if lt.offs < len(lt.lines)-lt.height {
+			lt.offs++
+		}
+		lt.mu.Unlock()
+		go lt.ui.redrawBody()
+	case termui.KeyCtrlD:
+		lt.mu.Lock()
+		lt.offs += 10
+		if lt.offs > len(lt.lines)-lt.height {
+			lt.offs = len(lt.lines) - lt.height
+		}
+		lt.mu.Unlock()
+		go lt.ui.redrawBody()
+	case termui.KeyCtrlU:
+		lt.mu.Lock()
+		lt.offs -= 10
+		if lt.offs < 0 {
+			lt.offs = 0
+		}
+		lt.mu.Unlock()
+		go lt.ui.redrawBody()
+	}
 	switch e.Ch {
 	case 'l':
 		go lt.ui.SelectTab("pods")
@@ -81,8 +114,12 @@ func (lt logTab) uiUpdate(e termui.Event) {
 func (lt *logTab) toRows() []*termui.Row {
 	lt.mu.Lock()
 	defer lt.mu.Unlock()
-	rows := make([]*termui.Row, 0, len(lt.lines))
-	for _, l := range lt.lines {
+	rows := make([]*termui.Row, 0, lt.height)
+	lines := lt.lines[lt.offs:]
+	if len(lines) > lt.height {
+		lines = lines[:lt.height]
+	}
+	for _, l := range lines {
 		rows = append(rows, termui.NewRow(termui.NewCol(12, 0, label(l))))
 	}
 	return rows
