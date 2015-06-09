@@ -44,6 +44,16 @@ func (r nodeItem) toRows() []*termui.Row {
 	case api.NodeTerminated:
 		lstate.TextFgColor = termui.ColorRed
 	}
+	if lstate.Text == "" {
+		for _, c := range r.node.Status.Conditions {
+			if c.Status == api.ConditionTrue {
+				lstate.Text = string(c.Type)
+				if c.Type == api.NodeReady {
+					lstate.TextFgColor = termui.ColorGreen
+				}
+			}
+		}
+	}
 
 	var addr string
 	for _, a := range r.node.Status.Addresses {

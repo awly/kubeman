@@ -22,6 +22,7 @@ func (u *UI) watchUpdates() {
 	}
 	var err error
 	for i, w := range watches {
+		log.Println("creating watch for", w.resource)
 		watches[i].c, err = w.watch()
 		if err != nil {
 			log.Println(err)
