@@ -8,7 +8,9 @@ It is intended to be used as a replacement for `kubectl` although it has a long 
 
     go get github.com/alytvynov/kubeman
 
-Yes, you need a working and relatively up to date version of go for this.
+You need a working and relatively up to date version of go for this.
+
+I run this tool against the latest release version of [kubernetes libraries](https://github.com/GoogleCloudPlatform/kubernetes) so you might need to check out a specific tag for it to work properly.
 
 ## But.. why?
 
@@ -19,6 +21,12 @@ Pretty much the difference between this:
 And this:
 
 ![kubeman](kubeman.png)
+
+## Debugging
+
+If kubeman exits unexpectedly or has some other weird behavior, check ~/.kubeman.log file, it may contain some information.
+
+If you find an issue, please create an issue in this repo, appreciate that.
 
 TODO:
 
