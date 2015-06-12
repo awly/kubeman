@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
-	"github.com/gizak/termui"
+	"github.com/alytvynov/termui"
 )
 
 type Event struct {

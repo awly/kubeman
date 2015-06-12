@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
-	"github.com/gizak/termui"
+	"github.com/alytvynov/termui"
 )
 
 func nodesTab(ui *UI) tab {

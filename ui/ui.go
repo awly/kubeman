@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/alytvynov/kubeman/client"
-	"github.com/gizak/termui"
+	"github.com/alytvynov/termui"
 	"github.com/nsf/termbox-go"
 )
 

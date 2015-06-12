@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
-	"github.com/gizak/termui"
+	"github.com/alytvynov/termui"
 )
 
 type logTab struct {
