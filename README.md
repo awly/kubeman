@@ -7,10 +7,10 @@ It is intended to be used as a replacement for `kubectl` although it has a long 
 ## Installation
 
     go get github.com/alytvynov/kubeman
+	cd $GOPATH/src/github.com/alytvynov/kubeman; godep restore
+    go install github.com/alytvynov/kubeman
 
-You need a working and relatively up to date version of go for this.
-
-I run this tool against the latest release version of [kubernetes libraries](https://github.com/GoogleCloudPlatform/kubernetes) so you might need to check out a specific tag for it to work properly.
+You need a working and relatively up to date version of go and godep for this.
 
 ## But.. why?
 
