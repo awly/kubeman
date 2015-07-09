@@ -12,6 +12,16 @@ It is intended to be used as a replacement for `kubectl` although it has a long 
 
 You need a working and relatively up to date version of go and godep for this.
 
+## Controls
+
+- arrows up/down - navigate columns
+- number keys - navigate tabs
+
+### pods tab
+
+- `S` - destroy pod
+- `l` - stream logs for pod
+
 ## But.. why?
 
 Pretty much the difference between this:
