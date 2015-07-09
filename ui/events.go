@@ -73,9 +73,13 @@ func (ui *UI) updateTabUI(e termui.Event) {
 	ui.mu.Unlock()
 }
 
-func handleUpdate(ui *UI, e Event) {
+func (ui *UI) handleUpdate(e Event) {
 	log.Printf("%+v", e)
 	if e.Type == watch.Error {
+		return
+	}
+	if e.Resource == "status" {
+		ui.status.dataUpdate(e)
 		return
 	}
 	t, ok := ui.tabs[e.Resource]
@@ -84,4 +88,8 @@ func handleUpdate(ui *UI, e Event) {
 		return
 	}
 	t.dataUpdate(e)
+}
+
+func (ui *UI) statusUpdate(msg string) {
+	ui.handleUpdate(Event{Resource: "status", Data: statusUpdate{msg: msg}})
 }

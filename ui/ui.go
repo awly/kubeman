@@ -14,6 +14,7 @@ type UI struct {
 	tabs     map[string]tab
 	selected string
 	body     tab
+	status   tab
 	exitch   chan struct{}
 	api      *client.Client
 
@@ -29,6 +30,7 @@ func New(c *client.Client) (*UI, error) {
 		mu:       &sync.Mutex{},
 		api:      c,
 	}
+	ui.status = &statusBar{ui: ui}
 	ui.tabs = map[string]tab{
 		"pods":     podsTab(ui),
 		"services": servicesTab(ui),
@@ -43,6 +45,11 @@ func New(c *client.Client) (*UI, error) {
 		return nil, err
 	}
 	termbox.SetInputMode(termbox.InputCurrent | termbox.InputMouse)
+
+	termui.Body.Rows = make([]*termui.Row, termui.TermHeight())
+	for i := range termui.Body.Rows {
+		termui.Body.Rows[i] = termui.NewRow(termui.NewCol(12, 0, label("")))
+	}
 
 	ui.redrawTabs()
 	ui.redrawBody()
@@ -73,12 +80,8 @@ func (ui *UI) redrawTabs() {
 		tabCols = append(tabCols, termui.NewCol(12/len(ui.tabs), 0, l))
 		spaceCols = append(spaceCols, termui.NewCol(12/len(ui.tabs), 0, s))
 	}
-	if len(termui.Body.Rows) >= 2 {
-		termui.Body.Rows[0] = termui.NewRow(tabCols...)
-		termui.Body.Rows[1] = termui.NewRow(spaceCols...)
-	} else {
-		termui.Body.AddRows(termui.NewRow(tabCols...), termui.NewRow(spaceCols...))
-	}
+	termui.Body.Rows[0] = termui.NewRow(tabCols...)
+	termui.Body.Rows[1] = termui.NewRow(spaceCols...)
 	termui.Body.Align()
 	termui.Render(termui.Body)
 }
@@ -86,7 +89,15 @@ func (ui *UI) redrawTabs() {
 func (ui *UI) redrawBody() {
 	ui.mu.Lock()
 	defer ui.mu.Unlock()
-	termui.Body.Rows = append(termui.Body.Rows[:2], ui.body.toRows()...)
+	copy(termui.Body.Rows[2:len(termui.Body.Rows)-1], ui.body.toRows())
+	termui.Body.Align()
+	termui.Render(termui.Body)
+}
+
+func (ui *UI) redrawStatus() {
+	ui.mu.Lock()
+	defer ui.mu.Unlock()
+	termui.Body.Rows[len(termui.Body.Rows)-1] = ui.status.toRows()[0]
 	termui.Body.Align()
 	termui.Render(termui.Body)
 }
