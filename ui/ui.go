@@ -89,7 +89,10 @@ func (ui *UI) redrawTabs() {
 func (ui *UI) redrawBody() {
 	ui.mu.Lock()
 	defer ui.mu.Unlock()
-	copy(termui.Body.Rows[2:len(termui.Body.Rows)-1], ui.body.toRows())
+	n := copy(termui.Body.Rows[2:len(termui.Body.Rows)-1], ui.body.toRows())
+	for i := n + 2; i < len(termui.Body.Rows)-1; i++ {
+		termui.Body.Rows[i] = termui.NewRow(termui.NewCol(12, 0, label("")))
+	}
 	termui.Body.Align()
 	termui.Render(termui.Body)
 }
