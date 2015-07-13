@@ -7,7 +7,6 @@ import (
 
 	"github.com/alytvynov/kubeman/client"
 	"github.com/alytvynov/termui"
-	"github.com/nsf/termbox-go"
 )
 
 type UI struct {
@@ -44,7 +43,6 @@ func New(c *client.Client) (*UI, error) {
 	if err := termui.Init(); err != nil {
 		return nil, err
 	}
-	termbox.SetInputMode(termbox.InputCurrent | termbox.InputMouse)
 
 	termui.Body.Rows = make([]*termui.Row, termui.TermHeight())
 	for i := range termui.Body.Rows {

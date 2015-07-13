@@ -45,14 +45,6 @@ func (ui *UI) eventLoop(ec <-chan termui.Event) {
 				continue
 			}
 			ui.updateTabUI(e)
-		case termui.EventMouse:
-			// Top 2 rows are tabs
-			if e.MouseY < 2 {
-				// Tab index = X / tabWidth
-				i := e.MouseX / (termui.TermWidth() / len(ui.tabs))
-				ui.SelectTab(ui.tabNames()[i])
-			}
-			ui.updateTabUI(e)
 		}
 	}
 }
