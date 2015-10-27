@@ -24,7 +24,7 @@ func showLogTab(ui *UI, p api.Pod) tab {
 	lt := &logTab{
 		ui:     ui,
 		closed: make(chan struct{}),
-		height: termui.TermHeight() - 2,
+		height: termui.TermHeight() - 3,
 		mu:     &sync.Mutex{},
 	}
 	ui.body = lt
