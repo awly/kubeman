@@ -34,6 +34,10 @@ func (ui *UI) eventLoop(ec <-chan termui.Event) {
 				close(ui.exitch)
 				return
 			}
+			if e.Ch == 'R' {
+				ui.api.DisconnectWatches()
+				continue
+			}
 			if e.Ch >= '1' && e.Ch <= '9' {
 				i := e.Ch - '1'
 				tabs := ui.tabNames()

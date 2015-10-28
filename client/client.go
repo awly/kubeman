@@ -3,6 +3,7 @@ package client
 import (
 	"io"
 	"strconv"
+	"sync"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/client"
@@ -14,7 +15,9 @@ import (
 )
 
 type Client struct {
-	c *client.Client
+	c       *client.Client
+	mu      *sync.Mutex
+	watches map[string]watch.Interface
 }
 
 func Connect() (*Client, error) {
@@ -34,7 +37,7 @@ func Connect() (*Client, error) {
 		return nil, err
 	}
 
-	return &Client{c: c}, nil
+	return &Client{c: c, watches: make(map[string]watch.Interface), mu: &sync.Mutex{}}, nil
 }
 
 func (c *Client) Services() ([]api.Service, error) {
@@ -50,6 +53,9 @@ func (c *Client) WatchServices() (<-chan watch.Event, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.mu.Lock()
+	c.watches["services"] = w
+	c.mu.Unlock()
 	return w.ResultChan(), nil
 }
 
@@ -70,6 +76,9 @@ func (c *Client) WatchPods() (<-chan watch.Event, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.mu.Lock()
+	c.watches["pods"] = w
+	c.mu.Unlock()
 	return w.ResultChan(), nil
 }
 
@@ -86,6 +95,9 @@ func (c *Client) WatchRCs() (<-chan watch.Event, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.mu.Lock()
+	c.watches["rcs"] = w
+	c.mu.Unlock()
 	return w.ResultChan(), nil
 }
 
@@ -102,6 +114,9 @@ func (c *Client) WatchNodes() (<-chan watch.Event, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.mu.Lock()
+	c.watches["nodes"] = w
+	c.mu.Unlock()
 	return w.ResultChan(), nil
 }
 
@@ -114,4 +129,13 @@ func (c *Client) Logs(pod, cont string, follow bool) (io.ReadCloser, error) {
 		Param("follow", strconv.FormatBool(follow)).
 		Param("container", cont).
 		Stream()
+}
+
+func (c *Client) DisconnectWatches() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for _, w := range c.watches {
+		w.Stop()
+	}
+	c.watches = make(map[string]watch.Interface)
 }
