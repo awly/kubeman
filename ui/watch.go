@@ -49,11 +49,18 @@ func (u *UI) watchUpdates() {
 		if !ok {
 			log.Println(w.resource, "watch closed, reconnecting")
 			u.statusUpdate("reconnecting " + w.resource + " watch")
-			w.c, err = w.watch()
+			watches[i].c, err = w.watch()
+			cases[i] = reflect.SelectCase{
+				Dir:  reflect.SelectRecv,
+				Chan: reflect.ValueOf(watches[i].c),
+			}
 			if err != nil {
 				log.Println(err)
 				u.statusUpdate(err.Error())
+				continue
 			}
+			log.Println(w.resource, "watch reconnected")
+			u.statusUpdate("connected")
 			continue
 		}
 		e := val.Interface().(watch.Event)
